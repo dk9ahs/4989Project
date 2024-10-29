@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사구팔구</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css">
+    <script th:src="@{/js/Websocket.js}"></script>
+    <script th:src="@{/js/chat.js}"></script>
+    <link th:href="@{/css/Header.css}" rel="stylesheet" />
+    <link th:href="@{/css/Footer.css}" rel="stylesheet" />
+</head>
+<style>
+    /* 책 리스트 테이블 */
+    .book-list-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+    .book-list-table th, .book-list-table td {
+        padding: 2px;
+    }
+    .book-list-table th {
+        background-color: #f4f4f4;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+        border-top: 1px solid #ddd;
+        padding: 8px;
+    }
+    .book-list-table td {
+        margin: 2px;
+        vertical-align: top;
+        border-bottom: 1px solid #ddd;
+    }
+    .book-image {
+        width: 150px;
+        height: 200px;
+        margin-right: 10px;
+    }
+    .price {
+        color: red;
+        font-weight: bold;
+    }
+    .book-info {
+        display: flex;
+        gap: 10px;
+    }
+    .book-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 글쓰기 버튼 - 오른쪽 상단 */
+    .write-btn-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+    }
+
+    .write-btn-wrapper .btn {
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        padding: 8px 20px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    /* 페이징 중앙 배치 */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    /* 검색바 중앙 배치 */
+    .search-bar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        margin-top: 20px;
+    }
+
+    .search-bar select, .search-bar input, .search-bar button {
+        padding: 6px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    /* 검색 버튼 스타일 */
+    .search-bar button {
+        background-color: #2eb14b;
+        color: white;
+        border: none;
+        padding: 6px 15px;
+        cursor: pointer;
+    }
+
+    .search-bar button:hover {
+        background-color: #1f8a37;
+    }
+
+    .book-actions {
+        display: flex;
+        flex-direction: column;
+        margin: 0 auto;
+        gap: 5px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .button {
+        background-color: #ff6f61;
+        color: white;
+        padding: 5px 8px;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+        font-size: 16px;
+    }
+
+    .button:hover {
+        background-color: #ff4c3b;
+    }
+
+    .remarks {
+        width: 100px;
+        text-align: center;
+    }
+</style>
+
+<script th:inline="javascript">
+    // 구매 버튼 클릭 시 결제 페이지로 이동
+    function redirectToOrder(limage, sidx, title, author, publisher, price) {
+        // 인코딩 후 결제 페이지로 전달
+        const encodedTitle = encodeURIComponent(title);
+        const encodedAuthor = encodeURIComponent(author);
+        const encodedPrice = encodeURIComponent(price);
+
+        // URL에 값 포함해서 이동
+        const orderUrl = `/order/create?limage=${encodeURIComponent(limage)}&sidx=${sidx}&title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&publisher=${encodeURIComponent(publisher)}&price=${encodeURIComponent(price)}`;
+        window.location.href = orderUrl;
+    }
+
+    function checkWritePermission(){
+
+        let loginNick = [[${loginNick}]]
+
+        if(loginNick == 'Guest'){
+           var answer = window.confirm("비회원은 글쓰기가 불가능합니다. 로그인 하시겠습니까?");
+           if(answer == true){
+                location.href="../guest/loginform";
+           }
+        }
+        else {
+            location.href="/salesboard/write";
+        }
+    }
+
+    function openNewWindow(receiver){
+        let loginNick = [[${loginNick}]]
+
+        if(loginNick == 'Guest'){
+           var answer = window.confirm("비회원은 쪽지 기능이 불가능합니다. 로그인 하시겠습니까?");
+           if(answer == true){
+                location.href="../guest/loginform";
+           }
+        }
+        else {
+            window.open("/messages/form?receiver=" + receiver, "popup",
+                   'width=600,height=500');
+        }
+    }
+</script>
+
+<body>
+<div th:replace="~{Front/Header :: header}"></div>
+<table class="book-list-table">
+    <colgroup>
+        <col width="10%"/>
+        <col width="*" />
+        <col width="15%" />
+        <col width="15%" />
+        <col width="15%" />
+    </colgroup>
+    <thead>
+    <tr>
+        <th>번호</th>
+        <th>제목</th>
+        <th>작성자</th>
+        <th>작성일</th>
+        <th>비고</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!--게시글 없을때 -->
+    <tr th:if="${salesBoards == null} or ${salesBoards.size() == 0}" >
+        <td colspan="7" style="text-align:center; font-size:20px;">
+            등록된 게시물이 없습니다.
+        </td>
+    </tr>
+    <!--게시글 있을때 -->
+    <tr th:each="post : ${salesBoards}" style="height:250px">
+        <td style="text-align:center; font-size:18px;" th:text="${totalCount - ((currentPage -1) * pageSize) - postStat.index}">글번호</td>
+        <td>
+            <div class="book-info">
+                <img th:if="${post.limage != null}" th:src="@{${post.limage}}" alt="Image" class="book-image">
+                <img th:if="${post.oimage == '' or post.oimage == null} and ${post.limage == null} and (${post.simage == '' or post.simage == null})" src="/images/NoImage.jpg" alt="No Image" class="book-image">
+                <!--                        <img th:unless="${post.oimage == '' or post.oimage == null}" th:src="@{/images/{image}(image=${post.simage})}" alt="Book Image" class="book-image">-->
+                <img th:unless="${post.oimage == '' or post.oimage == null}" th:src="@{|/images/${post.simage}|}" alt="Book Image" class="book-image">
+                <div class="book-details">
+                    <br/>
+                    <strong>
+                        <th:block th:switch="${post.classification}">
+                            <a th:case="sale" th:text="'[판매] ' + ${post.title}" th:href="@{salesboard/detail(sidx=${post.sidx})}"></a>
+                            <a th:case="trade" th:text="'[교환] ' + ${post.title}" th:href="@{salesboard/detail(sidx=${post.sidx})}"></a>
+                            <a th:case="sharing" th:text="'[나눔] ' + ${post.title}" th:href="@{salesboard/detail(sidx=${post.sidx})}"></a>
+                            <a th:case="wanted" th:text="'[구해요] ' + ${post.title}" th:href="@{salesboard/detail(sidx=${post.sidx})}"></a>
+                            <a th:case="*" th:text="'[거래완료] ' + ${post.title}" th:href="@{salesboard/detail(sidx=${post.sidx})}"></a>
+                        </th:block>
+                    </strong>
+                    <br/>
+                    <p style="white-space: nowrap;">
+                        <span style="font-weight: bold;" th:text="${post.booktitle}"></span> <br/>
+                        지은이 : <span th:text="${post.author}"></span> <br/>
+                        출판사 : <span th:text="${post.publisher}"></span>
+                    </p>
+                    <!-- 지역 -->
+                    <span th:if="${#strings.contains(post.region, '선택')}">지역 미설정</span>
+                    <span th:unless="${#strings.contains(post.region, '선택')}" th:text="${post.region}"></span>
+                    <!--가격 -->
+                    <br/>
+                    <span class="price" th:if="${post.price == 0}">가격 정보 없음</span>
+                    <span class="price" th:unless="${post.price == 0}" th:text="${post.price} + ' 원'"></span>
+                </div>
+            </div>
+            <!--조회수, 좋아요-->
+            <div style="text-align:right; font-size:20px;">
+                <i class="bi bi-eye"></i> <span th:text="${post.viewCount}"></span>
+                <th:block th:if="${loginNick == 'Guest'}">
+                    <i class="bi bi-hand-thumbs-up"></i>
+                </th:block>
+                <th:block th:unless="${loginNick == 'Guest'}">
+                    <a th:href="@{salesboard/like(sidx=${post.sidx})}"><i class="bi bi-hand-thumbs-up text-danger" th:if="${likedList[postStat.index]}"></i><i class="bi bi-hand-thumbs-up" th:unless="${likedList[postStat.index]}"></i></a>
+                </th:block>
+                <span th:text="${post.likeCount}"></span>&nbsp;
+            </div>
+        </td>
+        <td style="text-align:center; vertical-align: middle;">
+            <span th:text="${post.nick}">판매자 닉네임</span> <a th:attr="onclick=|openNewWindow('${post.nick}')|"><i class="bi bi-chat-dots-fill"></i></a>
+        </td>
+        <td  style="text-align:center; vertical-align: middle;" >
+            <span th:if="${post.updateDate == null}" th:text="${#temporals.format(post.createDate, 'yyyy-MM-dd')}"></span>
+            <span th:unless="${post.updateDate == null}" th:text="${#temporals.format(post.updateDate, 'yyyy-MM-dd')}"></span>
+        </td>
+        <td class="remarks" style="vertical-align: middle;">
+            <div class="book-actions">
+                <button th:unless="${post.price == 0}" class="button"
+                        th:data-limage="${post.limage}"
+                        th:data-sidx="${post.sidx}"
+                        th:data-title="${post.booktitle}"
+                        th:data-author="${post.author}"
+                        th:data-publisher="${post.publisher}"
+                        th:data-price="${post.price}"
+                        onclick="redirectToOrder(
+                        this.getAttribute('data-limage'),
+                        this.getAttribute('data-sidx'),
+                        this.getAttribute('data-title'),
+                        this.getAttribute('data-author'),
+                        this.getAttribute('data-publisher'),
+                        this.getAttribute('data-price'))">
+                    바로구매
+                </button>
+                <button th:if="${post.price == 0}" class="button" th:attr="onclick=|openNewWindow('${post.nick}')|">연락하기</button>
+                <button class="button" >장바구니</button>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="write-btn-wrapper mt-1">
+    <a href="javascript:checkWritePermission();" class="btn">글쓰기</a>
+</div>
+
+<!-- 페이징과 검색바 -->
+<nav aria-label="Page navigation example" class="d-flex justify-content-center" th:if="${totalPage > 0}">
+    <ul class="pagination">
+        <!-- 이전 버튼: 현재 페이지가 1보다 크면 활성화 -->
+        <li th:if="${currentPage > 1}" class="page-item">
+            <a class="page-link" th:href="@{/salesboard(page='1', searchField=${searchField}, searchWord=${searchWord})}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        <li th:if="${currentPage > 1}" class="page-item">
+            <a class="page-link" th:href="@{/salesboard(page=${currentPage - 1}, searchField=${searchField}, searchWord=${searchWord})}" aria-label="Previous">
+                <span aria-hidden="true">&lsaquo;</span>
+            </a>
+        </li>
+
+        <!-- 페이지 번호 리스트 -->
+        <li th:each="page : ${#numbers.sequence(currentGroup * 5 + 1, totalPage)}"
+            th:if="${page <= (currentGroup + 1) * 5}"
+            th:classappend="${page == currentPage} ? 'active' : ''" class="page-item">
+            <a th:href="@{/salesboard(page=${page}, searchField=${searchField}, searchWord=${searchWord})}" th:text="${page}" class="page-link"></a>
+        </li>
+
+        <!-- 다음 버튼: 현재 페이지가 마지막 페이지보다 작으면 활성화 -->
+        <li th:if="${currentPage < totalPage}" class="page-item">
+            <a class="page-link" th:href="@{/salesboard(page=${currentPage + 1}, searchField=${searchField}, searchWord=${searchWord})}" aria-label="Next">
+                <span aria-hidden="true">&rsaquo;</span>
+            </a>
+        </li>
+
+        <li th:if="${currentPage < totalPage}" class="page-item">
+            <a class="page-link" th:href="@{/salesboard(page=${totalPage}, searchField=${searchField}, searchWord=${searchWord})}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- 검색바 중앙 배치 -->
+<div class="search-bar mb-3">
+    <form>
+        <select>
+            <option value="">전체기간</option>
+        </select>
+        <select name="searchField">
+            <option value="title" th:selected="${searchField == 'title'}">제목</option>
+            <option value="content" th:selected="${searchField == 'content'}">내용</option>
+            <option value="nick" th:selected="${searchField == 'nick'}">작성자</option>
+            <option value="booktitle" th:selected="${searchField == 'booktitle'}">책이름</option>
+            <option value="author" th:selected="${searchField == 'author'}">지은이</option>
+            <option value="publisher" th:selected="${searchField == 'publisher'}">출판사</option>
+        </select>
+        <input type="text" name="searchWord" placeholder="검색어를 입력해주세요" th:if="${searchWord != null}" th:value="${searchWord}">
+        <input type="text" name="searchWord" placeholder="검색어를 입력해주세요" th:unless="${searchWord != null}">
+        <button type="submit">검색</button>
+    </form>
+</div>
+
+<div th:replace="~{Front/Footer :: footer}"></div>
+</body>
+</html>

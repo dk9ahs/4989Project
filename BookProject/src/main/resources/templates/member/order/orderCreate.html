@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사구팔구</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/Header.css" />
+  <link rel="stylesheet" href="/css/Footer.css" />
+  <style>
+    .container {
+        max-width: 900px;
+        margin: 20px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .summary-box {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    .summary-item img {
+        max-width: 100px;
+        max-height: 150px;
+        object-fit: cover;
+        margin-right: 20px;
+    }
+    .total-price {
+        font-size: 20px;
+        font-weight: bold;
+        color: #dc3545;
+    }
+    .btn-pay {
+        background-color: #dc3545;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        width: 100%;
+    }
+    input[disabled], select[disabled] {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+  </style>
+  <!-- 아임포트 결제 스크립트 추가 -->
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+</head>
+<body>
+
+<div th:replace="/Front/Header :: header"></div>
+
+<div class="container">
+  <!-- 받는 분 정보 -->
+  <div class="mb-4">
+    <div class="section-title">받는 분 정보</div>
+    <div class="mb-3">
+      <label for="recipientName" class="form-label">수령인 이름</label>
+      <input type="text" class="form-control" id="recipientName" th:value="${user.name}" disabled>
+    </div>
+    <div class="mb-3">
+      <label for="recipientPhone" class="form-label">연락처</label>
+      <input type="text" class="form-control" id="recipientPhone" th:value="${user.phone}" disabled>
+    </div>
+    <div class="mb-3">
+      <label for="shippingAddress" class="form-label">배송지 정보</label>
+      <input type="text" class="form-control" id="shippingAddress" th:value="${user.address}" disabled>
+      <input type="text" class="form-control" id="shippingAddress2" th:value="${user.detailAddress}" disabled>
+    </div>
+  </div>
+
+  <!-- 배송 요청 사항 -->
+  <div class="mb-4">
+    <div class="section-title">배송 요청 사항</div>
+    <select class="form-select mb-3">
+      <option selected>부재 시 문 앞에 놓아주세요</option>
+      <option>다른 배송 메모</option>
+    </select>
+  </div>
+
+  <!-- 주문자/이메일 정보 -->
+  <div class="mb-4">
+    <div class="section-title">주문자/이메일</div>
+    <div class="mb-3">
+      <label for="orderEmail" class="form-label">이메일</label>
+      <input type="email" class="form-control" id="orderEmail" th:value="${user.email}" disabled>
+    </div>
+  </div>
+
+  <!-- 주문 상품 목록 -->
+  <div class="mb-4">
+    <div class="section-title">주문 상품</div>
+    <div class="summary-box">
+      <div class="summary-item">
+        <img id="book-cover" alt="책 표지">
+        <div>
+          <div>상품명: <span id="book-title"></span></div>
+          <div>저자: <span id="book-author"></span></div>
+          <div>출판사: <span id="book-publisher"></span></div>
+          <div>가격: <span id="book-price"></span></div>
+        </div>
+        <div>
+          수량: 1
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 결제 금액 -->
+  <div class="mb-4">
+    <div class="section-title">결제 금액</div>
+    <div class="summary-box">
+      <div class="summary-item">
+        <span>주문 금액</span>
+        <span id="order-price"></span>
+      </div>
+      <div class="summary-item">
+        <span>배송비</span>
+        <span>0원</span>
+      </div>
+      <hr>
+      <div class="summary-item total-price">
+        <span>결제 예정 금액</span>
+        <span id="total-price"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 결제 버튼 -->
+  <div>
+    <button class="btn btn-pay" id="pay-button">결제하기</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // URL에서 책 정보 추출
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const bookCover = urlParams.get('limage');  // 이미지 (limage)
+    const bookTitle = urlParams.get('title');   // 제목 (title)
+    const bookAuthor = urlParams.get('author'); // 저자 (author)
+    const bookPublisher = urlParams.get('publisher'); // 출판사 (publisher)
+    const bookPrice = urlParams.get('price');   // 가격 (price)
+
+    // 숫자에 쉼표를 추가한 형태로 가격을 표시
+    const formattedPrice = bookPrice ? Number(bookPrice).toLocaleString() + " 원" : '가격 정보 없음';
+
+    // 상품 정보 출력
+    document.getElementById('book-cover').src = bookCover || 'default_cover_image.jpg'; // 기본 이미지 추가 가능
+    document.getElementById('book-title').textContent = bookTitle || '제목 없음';
+    document.getElementById('book-author').textContent = bookAuthor || '저자 정보 없음';
+    document.getElementById('book-publisher').textContent = bookPublisher || '출판사 정보 없음';
+    document.getElementById('book-price').textContent = formattedPrice;
+    document.getElementById('order-price').textContent = formattedPrice;
+    document.getElementById('total-price').textContent = formattedPrice;
+
+    // 사용자 정보 가져오기 (HTML 태그로부터 값 추출)
+    const buyerEmail = document.getElementById('orderEmail').value;
+    const buyerName = document.getElementById('recipientName').value;
+    const buyerTel = document.getElementById('recipientPhone').value;
+    const buyerAddr = document.getElementById('shippingAddress').value;
+    const buyerDetailAddr = document.getElementById('shippingAddress2').value;
+
+    // 결제 버튼 클릭 이벤트
+    document.getElementById('pay-button').addEventListener('click', function() {
+        const book = {
+            title: document.getElementById('book-title').textContent,
+            price: document.getElementById('book-price').textContent.replace(/[^\d]/g, '').trim() // '원'과 쉼표 제거
+        };
+        requestPayment(book, buyerEmail, buyerName, buyerTel, buyerAddr, buyerDetailAddr);
+    });
+
+    function requestPayment(book, buyerEmail, buyerName, buyerTel, buyerAddr, buyerDetailAddr) {
+        var IMP = window.IMP; // 아임포트 객체 확인
+        if (!IMP) {
+            alert('아임포트 결제 모듈을 로드할 수 없습니다.');
+            return;
+        }
+        IMP.init('imp37626515'); // 가맹점 식별코드
+
+        IMP.request_pay({
+            pg: "html5_inicis", // PG사 코드 설정
+            pay_method: "card",
+            merchant_uid: "order_no_" + new Date().getTime(),
+            name: book.title,
+            amount: String(book.price),  // 숫자를 문자열로 변환하여 amount에 전달
+            buyer_email: buyerEmail,
+            buyer_name: buyerName,
+            buyer_tel: buyerTel,
+            buyer_addr: buyerAddr,
+            buyer_postcode: buyerDetailAddr
+        }, function (rsp) {
+            if (rsp.success) {
+                console.log("Payment successful, imp_uid: ", rsp.imp_uid);  // 결제 성공 로그 추가
+                alert('결제가 완료되었습니다.');
+                verifyPayment(rsp.imp_uid);
+            } else {
+                console.log("Payment failed: ", rsp.error_msg);  // 결제 실패 로그 추가
+                alert('테스트 결제에 실패하였습니다. 에러 내용: ' + rsp.error_msg);
+            }
+        });
+    }
+
+    function verifyPayment(imp_uid) {
+        console.log("Verifying payment, imp_uid: ", imp_uid);  // 결제 검증 단계 로그 추가
+
+        fetch('/payment/verifyPayment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ imp_uid: imp_uid })
+        })
+        .then(response => {
+            console.log("Response status:", response.status);  // 응답 상태 코드 확인
+            console.log("Response received from /payment/verifyPayment: ", response);
+
+            if (!response.ok) {  // 응답 상태 코드가 200이 아닌 경우
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return response.json();  // 응답 데이터를 JSON으로 파싱
+        })
+        .then(data => {
+            console.log("Parsed response data: ", data);
+
+            if (data.success) {
+                console.log("Payment verification successful: ", data);
+                saveOrder(data.paymentInfo);
+            } else {
+                console.log("Payment verification failed: ", data);
+                alert('결제 검증에 실패하였습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error verifying payment:', error);
+            alert('결제 검증 중 오류가 발생했습니다. 다시 시도해주세요.');
+        });
+    }
+
+    function saveOrder(paymentInfo) {
+        const orderData = {
+            impUid: paymentInfo.imp_uid,
+            merchantUid: paymentInfo.merchant_uid,
+            amount: String(paymentInfo.amount), // amount을 문자열로 변환
+            buyerEmail: document.getElementById('orderEmail').value,
+            buyerName: document.getElementById('recipientName').value,
+            buyerTel: document.getElementById('recipientPhone').value,
+            buyerAddr: document.getElementById('shippingAddress').value,
+            buyerDetailAddr: document.getElementById('shippingAddress2').value,
+            bookTitle: document.getElementById('book-title').textContent,
+            bookPrice: document.getElementById('book-price').textContent.replace(/[^\d]/g, '').trim(), // '원'과 쉼표 제거
+            bookAuthor: document.getElementById('book-author').textContent,
+            bookPublisher: document.getElementById('book-publisher').textContent,
+            bookImageUrl: document.getElementById('book-cover').src
+        };
+
+        console.log(orderData);  // 데이터를 콘솔에서 확인
+
+        console.log("Saving order", orderData);  // 주문 정보가 제대로 출력되는지 확인
+
+        console.log("Sending order data:", JSON.stringify(orderData));
+
+        fetch('/order/saveOrder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData),
+            credentials: 'include'  // 쿠키 포함
+        })
+        .then(response => {
+            console.log("Response status:", response.status); // 상태 코드 출력
+            console.log("Response message:", response.statusText); // 상태 메시지 출력
+            if (!response.ok) {
+                console.error("Server responded with an error:", response.status, response.statusText);
+                throw new Error('Server response wasn\'t OK');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // 주문 완료 후 페이지 이동 또는 추가 처리
+                window.location.href = '/';
+            } else {
+                alert('주문 저장에 실패하였습니다.');
+            }
+        })
+        .catch(error => console.error('Error saving order:', error));
+    }
+  });
+</script>
+<div th:replace="/Front/Footer :: footer"></div>
+
+</body>
+</html>

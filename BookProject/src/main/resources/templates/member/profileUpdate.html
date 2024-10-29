@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>사구팔구</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+	<link rel="stylesheet" href="/css/Header.css" />
+	<link rel="stylesheet" href="/css/Footer.css" />
+	<script th:src="@{/js/Websocket.js}"></script>
+	<script th:src="@{/js/chat.js}"></script>
+
+        <style>
+
+        </style>
+    </head>
+    <body>
+	<div th:replace="/Front/Header :: header"></div>
+	<div class="container mt-5">
+		<!-- 회원 수정 폼 -->
+		<form class="signup-form" id="signup-form" th:action="@{/member/Update}" th:object="${userDTO}" method="post" onsubmit="return validateForm()">
+			<!-- 에러 메시지 출력 -->
+			<div th:if="${not #lists.isEmpty(errorMessage)}" class="alert alert-danger" th:text="${errorMessage}"></div>
+			<div th:if="${not #lists.isEmpty(successMessage)}" class="alert alert-success" th:text="${successMessage}"></div>
+
+			<input type="hidden" id="id" name="id" th:field="*{id}">
+
+			<!-- 아이디 -->
+			<div class="mb-3 row">
+				<label for="id" class="col-sm-3 col-form-label">아이디</label>
+				<div class="col-sm-6">
+					<input type="text" class="form-control" th:field="*{id}" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+				</div>
+			</div>
+
+			<!-- 닉네임 -->
+			<div class="mb-3 row">
+				<label for="nick" class="col-sm-3 col-form-label">닉네임</label>
+				<div class="col-sm-6">
+					<input type="text" class="form-control" id="nick" name="nick" th:field="*{nick}">
+					<small class="form-text text-muted">닉네임은 3~10자 이내로 입력해주세요.</small>
+					<div th:if="${#fields.hasErrors('nick')}" class="text-danger" th:errors="*{nick}"></div>
+				</div>
+				<div class="col-sm-3">
+					<button type="button" onclick="fn_NickCheck();" id="NickCheck" class="btn btn-secondary w-100">중복 확인</button>
+				</div>
+			</div>
+
+			<!-- 현재 비밀번호 (일반 사용자일 때만 표시) -->
+			<div th:if="${userDTO.socialProvider == null}" class="mb-3 row">
+				<label for="currentPwd" class="col-sm-3 col-form-label">현재 비밀번호</label>
+				<div class="col-sm-6">
+					<input type="password" class="form-control" id="currentPwd" name="currentPwd" th:field="*{currentPwd}" required>
+					<div th:if="${#fields.hasErrors('currentPwd')}" class="text-danger" th:errors="*{currentPwd}"></div>
+				</div>
+			</div>
+
+			<!-- 새 비밀번호 (일반 사용자일 때만 표시) -->
+			<div th:if="${userDTO.socialProvider == null}" class="mb-3 row">
+				<label for="pwd" class="col-sm-3 col-form-label">새 비밀번호</label>
+				<div class="col-sm-6">
+					<input type="password" class="form-control" id="pwd" name="pwd" th:field="*{pwd}">
+					<small class="form-text text-muted">비밀번호는 8~20자 이내로 입력해주세요.</small>
+					<div th:if="${#fields.hasErrors('pwd')}" class="text-danger" th:errors="*{pwd}"></div>
+				</div>
+			</div>
+
+			<!-- 새 비밀번호 확인 (일반 사용자일 때만 표시) -->
+			<div th:if="${userDTO.socialProvider == null}" class="mb-3 row">
+				<label for="pwdconfirm" class="col-sm-3 col-form-label">새 비밀번호 확인</label>
+				<div class="col-sm-6">
+					<input type="password" class="form-control" id="pwdconfirm" name="pwdconfirm" th:field="*{pwdconfirm}">
+					<div th:if="${#fields.hasErrors('pwdconfirm')}" class="text-danger" th:errors="*{pwdconfirm}"></div>
+				</div>
+			</div>
+
+			<!-- 전화번호 -->
+			<div class="mb-3 row">
+				<label for="phone" class="col-sm-3 col-form-label">전화 번호</label>
+				<div class="col-sm-6">
+					<input type="text" class="form-control" id="phone" th:field="*{phone}" required/>
+				</div>
+			</div>
+
+			<!-- 이메일 (일반 사용자일 때만 수정 가능) -->
+			<div class="mb-3 row">
+				<label for="email" class="col-sm-3 col-form-label">이메일</label>
+				<div class="col-sm-6">
+					<input type="email" class="form-control" id="email" th:field="*{email}" th:readonly="${userDTO.socialProvider != null}" required/>
+				</div>
+			</div>
+
+			<!-- 우편번호 -->
+			<div class="mb-3 row">
+				<label for="zipcode" class="col-sm-3 col-form-label">우편번호</label>
+				<div class="col-sm-6">
+					<input type="text" class="form-control" id="zipcode" th:field="*{zipcode}" required/>
+				</div>
+				<div class="col-sm-3">
+					<button type="button" id="zipcode-btn" class="btn btn-secondary w-100" onclick="sample6_execDaumPostcode()">주소 찾기</button>
+				</div>
+			</div>
+
+			<!-- 주소 -->
+			<div class="mb-3 row">
+				<label for="address" class="col-sm-3 col-form-label">주소</label>
+				<div class="col-sm-6">
+					<input type="text" class="form-control" id="address" th:field="*{address}" required/>
+				</div>
+			</div>
+
+			<!-- 상세 주소 -->
+			<div class="mb-3 row">
+				<label for="detailAddress" class="col-sm-3 col-form-label">상세 주소</label>
+				<div class="col-sm-6">
+					<input type="text" class="form-control" id="detailAddress" th:field="*{detailAddress}" required/>
+				</div>
+			</div>
+
+			<!-- 정보 수정 버튼 -->
+			<div class="text-center">
+				<button type="submit" class="btn btn-secondary w-100">정보수정</button>
+			</div>
+		</form>
+		<div class="text-end mt-2">
+			<form th:action="@{/member/withdraw}" method="post" style="display:inline;">
+				<button type="submit" class="btn btn-danger" style="background-color: transparent; border: none; color: black; font-size: 12px; padding: 0; text-decoration: none;">
+					회원탈퇴
+				</button>
+			</form>
+		</div>
+	</div>
+
+	<script>
+		var isNickChecked = false;  // 닉네임 중복 체크 여부
+
+// 닉네임 중복 체크
+function fn_NickCheck() {
+    var nick = $('#nick').val();
+
+    if (nick.length < 3 || nick.length > 10) {
+        alert("닉네임은 3~10자 이내로 입력해주세요.");
+        return;
+    }
+
+    $.ajax({
+        url: "/NickCheck",
+        type: "POST",
+        data: JSON.stringify({nick: nick}),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+
+        success: function (data) {
+            if (data.exists) {
+                alert("이미 사용중인 닉네임입니다.");
+                $('#nick').addClass("has-error");
+                $('#nick').removeClass("has-success");
+                isNickChecked = false;  // 중복 체크 실패
+            } else {
+                alert("사용 가능한 닉네임입니다.");
+                $('#nick').addClass("has-success");
+                $('#nick').removeClass("has-error");
+                isNickChecked = true;  // 중복 체크 성공
+            }
+        },
+        error: function() {
+            alert("오류가 발생했습니다. 다시 시도해주세요.");
+        }
+    });
+}
+
+// 비밀번호 확인
+function validatePassword() {
+    var pwd = document.getElementById("pwd").value;
+    var pwdconfirm = document.getElementById("pwdconfirm").value;
+
+    if (pwd !== pwdconfirm) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return false;
+    }
+    return true;
+}
+
+// 회원가입 버튼 클릭 시 제출 시 모든 조건 확인
+$('#signup-form').on('submit', function (e) {
+    // 닉네임 중복 체크
+    if (!isNickChecked) {
+        e.preventDefault();  // 폼 제출 방지
+        alert("닉네임 중복 확인을 해주세요.");
+    } else if (!userDTO.socialProvider && !validatePassword()) {
+        // 일반 사용자인 경우에만 비밀번호 확인
+        e.preventDefault();  // 폼 제출 방지
+    }
+});
+       	</script>
+
+	<!--주소api-->
+	<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+	<script>
+		function sample6_execDaumPostcode() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    var addr = '';
+                    var extraAddr = '';
+
+                    if (data.userSelectedType === 'R') {
+                        addr = data.roadAddress;
+                    } else {
+                        addr = data.jibunAddress;
+                    }
+
+                    if(data.userSelectedType === 'R'){
+                        if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                            extraAddr += data.bname;
+                        }
+                        if(data.buildingName !== '' && data.apartment === 'Y'){
+                            extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                        }
+                        if(extraAddr !== ''){
+                            extraAddr = ' (' + extraAddr + ')';
+                        }
+                    }
+
+                    document.getElementById('zipcode').value = data.zonecode;
+                    document.getElementById("address").value = addr + extraAddr;
+                    document.getElementById("detailAddress").focus();
+                }
+            }).open();
+        }
+	</script>
+
+
+&nbsp;
+	<div th:replace="/Front/Footer :: footer"></div>
+    </body>
+</html>

@@ -1,0 +1,169 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    margin: 0 auto;
+    max-width: 1200px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+}
+
+.header .logo a {
+    font-size: 25px;
+    font-weight: bold;
+    color: black;
+    text-decoration: none;
+}
+
+.header .search-bar {
+    position: relative;
+    width: 50%;
+    margin-left: 30px;
+}
+
+.header .search-bar input[type="text"] {
+    width: 100%;
+    padding: 12px 45px 12px 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.header .search-bar button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.header .search-bar button svg {
+    width: 20px;
+    height: 20px;
+    fill: #333;
+}
+
+.header .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+}
+.header .user-menu .btn:hover {
+    color: #3C3D37; /* hover 시 글자색 변경 */
+}
+
+/*.user-menu .login {
+    background-color: limegreen;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    text-decoration: none;
+}*/
+
+.menu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: center;
+    padding: 10px 0;
+    background-color: #f9f9f9;
+    border-top: 1px solid #ddd;
+}
+
+.menu a {
+    text-decoration: none;
+    color: black;
+    font-size: 14px;
+    padding: 10px 20px;
+    font-weight: bold;
+}
+
+.dropdown {
+    position: relative;
+}
+
+/* 드롭다운 기본적으로 숨김 처리 */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 600px; /* 드롭다운 전체 너비 설정 */
+    background-color: white;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 10px;
+    gap: 20px;
+}
+
+/* 마우스를 올렸을 때만 드롭다운 보이도록 설정 */
+.dropdown:hover .dropdown-menu {
+    display: grid; /* 마우스를 올렸을 때만 드롭다운 보임 */
+}
+
+/* category-title의 스타일 수정: 가운데 정렬, 배경 검정, 텍스트 흰색 */
+.category-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+    background-color: black; /* 검정 배경 */
+    color: white; /* 글자색 흰색 */
+    padding: 10px;
+    width: 100%; /* 전체 너비 */
+}
+
+/* 1열과 2열의 텍스트 정렬 문제 해결 */
+.dropdown-menu .row {
+    display: flex;
+    width: 100%;
+    justify-content: space-between; /* 양쪽 끝에 1열과 2열 배치 */
+}
+
+.col-6 {
+    display: flex;
+    flex-direction: column;
+    width: 48%; /* 1열과 2열의 너비를 동일하게 조정 */
+}
+
+.category-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.category-list li {
+    margin-bottom: 5px;
+    text-align: left;
+    white-space: nowrap; /* 줄바꿈 방지 */
+}
+
+/* 미디어 쿼리 */
+@media screen and (max-width: 768px) {
+    .menu {
+        display: none;
+    }
+    .menu-bar-icon {
+        display: block;
+        cursor: pointer;
+        font-size: 20px;
+    }
+}
+
+

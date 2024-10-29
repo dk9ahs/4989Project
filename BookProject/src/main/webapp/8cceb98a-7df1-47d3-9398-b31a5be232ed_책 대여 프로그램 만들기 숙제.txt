@@ -1,0 +1,40 @@
+책 테이블 bk_tb
+1.책 번호  bk_num      number(10)     pk
+2.제목      bk_name     varchar2(100)
+3.권수      bk_count     number(2)
+
+회원테이블 me_tb
+1.회원번호       me_num     number(10) 
+2.아이디          me_id        varchar2(30)   pk  
+3.이름             me_name   varchar2(30)me
+4.블랙사용자    black          varchar(1)
+5.비밀번호       me_pass     varchar2(30)
+
+대여테이블 re_tb
+1.회원 번호   me_num    number(10)    pk
+2.책 번호      bk_num     number(10)    fk
+3.아이디       me_id        varchar2(30)   fk
+4.대여일자    rent_ date  postdate date default sysdate not null
+5.반납일자    return_date       postdate date default sysdate+7 not null
+
+
+bookDAO
+메뉴선택-userChoice
+도서조회- selBook
+전체조회-allSel
+도서삭제-delBook
+책등록-addBook
+
+memberDAO
+회원가입,아이디검사-membership
+로그인-login
+관리자로그인-adminLogin
+로그아웃-
+회원탈퇴-delMember
+
+rentDAO
+대여-bookRent
+비밀번호치면 멤버번호 나오는 메소드-addId
+반납-bookReturn
+
+

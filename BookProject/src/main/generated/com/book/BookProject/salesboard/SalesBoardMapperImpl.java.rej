@@ -1,0 +1,34 @@
+diff a/BookProject/src/main/generated/com/book/BookProject/salesboard/SalesBoardMapperImpl.java b/BookProject/src/main/generated/com/book/BookProject/salesboard/SalesBoardMapperImpl.java	(rejected hunks)
+@@ -7,8 +7,8 @@
+ 
+ @Generated(
+     value = "org.mapstruct.ap.MappingProcessor",
+-    date = "2024-10-09T19:37:24+0900",
+-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.11 (Oracle Corporation)"
++    date = "2024-10-22T09:56:41+0900",
++    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.12 (Homebrew)"
+ )
+ @Component
+ public class SalesBoardMapperImpl implements SalesBoardMapper {
+@@ -35,9 +35,9 @@
+         salesBoardDTO.setUpdateDate( salesBoard.getUpdateDate() );
+         salesBoardDTO.setViewCount( salesBoard.getViewCount() );
+         salesBoardDTO.setLikeCount( salesBoard.getLikeCount() );
++        salesBoardDTO.setLimage( salesBoard.getLimage() );
+         salesBoardDTO.setOimage( salesBoard.getOimage() );
+         salesBoardDTO.setSimage( salesBoard.getSimage() );
+-        salesBoardDTO.setDownCount( salesBoard.getDownCount() );
+ 
+         return salesBoardDTO;
+     }
+@@ -64,9 +64,9 @@
+         salesBoard.updateDate( dto.getUpdateDate() );
+         salesBoard.viewCount( dto.getViewCount() );
+         salesBoard.likeCount( dto.getLikeCount() );
++        salesBoard.limage( dto.getLimage() );
+         salesBoard.oimage( dto.getOimage() );
+         salesBoard.simage( dto.getSimage() );
+-        salesBoard.downCount( dto.getDownCount() );
+ 
+         return salesBoard.build();
+     }

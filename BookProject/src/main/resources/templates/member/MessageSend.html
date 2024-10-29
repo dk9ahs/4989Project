@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사구팔구</title>
+    <script th:inline="javascript">
+        let socket;
+
+        // 페이지 로드 시 WebSocket 연결
+        window.onload = function() {
+
+            // WebSocket 서버 URL (포트 번호는 서버에 맞게 수정)
+            socket = new WebSocket("ws://localhost:8083/test");
+
+            // WebSocket 연결이 열리면
+            socket.onopen = function() {
+                console.log("WebSocket 연결 성공");
+            };
+
+            // 메세지를 수신했을때
+            socket.onmessage = function(event) {
+                const message = event.data;
+                console.log("수신된 메시지:", message);
+
+                // 메시지를 페이지에 표시
+                const messagesContainer = document.getElementById("messagesContainer");
+                const messageElement = document.createElement("div");
+                messageElement.textContent = message; // 수신된 메시지를 표시
+                messagesContainer.appendChild(messageElement);
+
+                alert("서버 응답: " + message); // 수신된 메시지 알림
+            };
+
+            // WebSocket 연결이 닫히면
+            socket.onclose = function() {
+                console.log("WebSocket 연결 종료");
+            };
+
+            // WebSocket 오류 발생 시
+            socket.onerror = function(error) {
+                console.error("WebSocket 오류:", error);
+                alert("WebSocket 오류 발생: " + error.message);
+            };
+
+            // WebSocket 연결이 닫히면
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log("WebSocket 연결 종료 (정상 종료)");
+                } else {
+                    console.error("WebSocket 연결 종료 (비정상 종료)");
+                    alert("WebSocket 연결이 비정상적으로 종료되었습니다. 코드: " + event.code + ", 이유: " + event.reason);
+                }
+            };
+        };
+
+
+        // 메시지 전송 함수
+        function sendMessage() {
+
+            let loginNick = [[${loginNick}]]
+
+            const receiverNick = document.getElementById("receiverNick").value;
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+
+            const message = {
+                senderNick: loginNick,
+                receiverNick: receiverNick,
+                title: title,
+                content: content
+            };
+
+            // WebSocket으로 메시지 전송
+            socket.send(JSON.stringify(message));
+            console.log("보낸 메시지:", message);
+
+            // 입력 필드 초기화
+            document.getElementById("receiverNick").value = "";
+            document.getElementById("title").value = "";
+            document.getElementById("content").value = "";
+        }
+    </script>
+</head>
+<body>
+<h1>메시지 전송</h1>
+<label for="receiverNick">받는 사람 닉네임:</label>
+<input type="text" id="receiverNick" required><br><br>
+
+<label for="title">제목:</label>
+<input type="text" id="title" required><br><br>
+
+<label for="content">내용:</label>
+<textarea id="content" required></textarea><br><br>
+
+<button onclick="sendMessage()">전송</button>
+
+<div id="messagesContainer"></div>
+</body>
+</html>

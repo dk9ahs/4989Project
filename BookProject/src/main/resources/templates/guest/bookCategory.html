@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사구팔구</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/Header.css" />
+  <link rel="stylesheet" href="/css/Footer.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css">
+
+  <style>
+    /* 기본 스타일 설정 */
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .book-item {
+      border-bottom: 1px solid #e0e0e0;
+      padding: 15px 0;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .book-item img {
+      max-width: 120px;
+      margin-right: 20px;
+    }
+
+    .book-title {
+      font-weight: bold;
+      font-size: 1rem;
+      color: black;
+      text-decoration: none;
+    }
+
+    .pagination .page-item.active .page-link {
+      background-color: #6c757d;
+      color: white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .pagination .page-link {
+      color: #6c757d;
+      font-size: 1.2em;
+      border: none;
+    }
+
+    .pagination .page-item + .page-item {
+      margin-left: 10px;
+    }
+
+    /* 클릭 시 파란색 배경 제거 */
+    .pagination .page-link:focus {
+      outline: none;
+      box-shadow: none;
+      background-color: transparent;
+    }
+
+    .pagination .page-link:hover {
+      background-color: transparent;
+      color: inherit;
+      box-shadow: none;
+      outline: none;
+    }
+
+    /* 카테고리 트리 스타일 */
+    .category-tree ul {
+      list-style: none;
+      padding-left: 20px;
+      font-size: 0.9rem;
+    }
+
+    .category-tree li {
+      cursor: pointer;
+      margin: 5px 0;
+      position: relative;
+    }
+
+    .category-tree li button {
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .category-tree .nested {
+      display: none;
+    }
+
+    .category-tree .active {
+      display: block;
+    }
+
+    .expandable:before {
+      content: "+";
+      position: absolute;
+      left: -15px;
+    }
+
+    .non-expandable:before {
+      content: "□";
+      position: absolute;
+      left: -15px;
+    }
+
+    .selected {
+      font-weight: bold;
+    }
+
+    /* 별점 스타일 추가 */
+    .book-rating {
+      display: inline-flex;
+      align-items: center;
+      font-size: 1.2rem;
+      color: #ffcc00;
+    }
+
+    .book-rating i {
+      color: #FF4081;
+      margin-right: 0.2rem;
+    }
+
+    .rating-score {
+      font-size: 1.2rem;
+      margin-left: 0.5rem;
+      color: #FF4081;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 포함 -->
+<div th:replace="/Front/Header :: header"></div>
+
+<div class="container">
+  <div class="row">
+    <!-- 카테고리 트리 표시 -->
+    <div class="col-md-3">
+      <div id="category-tree" class="category-tree my-4"></div>
+    </div>
+
+    <!-- 책 목록 표시 -->
+    <div class="col-md-9">
+      <!-- 카테고리 제목 표시 -->
+      <h2 class="my-4" id="category-title">카테고리별 책 목록</h2>
+
+      <div id="book-list" class="my-4">
+        <!-- 책 목록이 동적으로 추가될 부분 -->
+      </div>
+
+      <!-- 페이지네이션 추가 -->
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center" id="pagination">
+          <!-- 페이지 버튼 동적으로 추가될 부분 -->
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- 푸터 포함 -->
+<div th:replace="/Front/Footer :: footer"></div>
+
+<!-- JavaScript로 데이터를 불러와서 테이블에 추가 -->
+<script type="module">
+  import { categoryTreeData } from './js/Category.js';
+
+  let currentPage = 1;
+  const booksPerPage = 10;
+
+  // 카테고리 제목 설정 함수
+  function setCategoryTitle(categoryId) {
+    function findCategoryName(data, id) {
+      for (const item of data) {
+        if (item.id === id) {
+          return item.name;
+        }
+        if (item.subcategories) {
+          const result = findCategoryName(item.subcategories, id);
+          if (result) {
+            return result;
+          }
+        }
+      }
+      return null;
+    }
+
+    const categoryName = findCategoryName(categoryTreeData, categoryId);
+    if (categoryName) {
+      document.getElementById('category-title').textContent = categoryName;
+    } else {
+      document.getElementById('category-title').textContent = "카테고리별 책 목록";
+    }
+  }
+
+  // 카테고리 트리 렌더링
+  function renderCategoryTree(container, data, parentCategory = "") {
+    const ul = document.createElement('ul');
+    for (const item of data) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.textContent = item.name;
+      button.dataset.categoryId = item.id;
+      li.appendChild(button);
+
+      // 하위 카테고리가 있는 경우
+      if (item.subcategories && item.subcategories.length > 0) {
+        const nestedUl = renderCategoryTree(li, item.subcategories);
+        nestedUl.classList.add('nested');
+        li.classList.add('expandable');
+        button.addEventListener('click', () => {
+          nestedUl.classList.toggle('active');
+        });
+        li.appendChild(nestedUl);
+      } else {
+        li.classList.add('non-expandable');
+      }
+
+      // 카테고리 클릭 시 이벤트 리스너 추가
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const selectedCategoryId = event.target.dataset.categoryId;
+        changeCategory(selectedCategoryId);
+        clearSelected();
+        button.classList.add('selected');
+      });
+
+      ul.appendChild(li);
+    }
+    container.appendChild(ul);
+    return ul;
+  }
+
+  // 선택된 항목 강조 제거
+  function clearSelected() {
+    const selectedItems = document.querySelectorAll(".selected");
+    selectedItems.forEach(item => {
+      item.classList.remove("selected");
+    });
+  }
+
+  // 카테고리 변경 함수
+  function changeCategory(newCategoryId) {
+    currentPage = 1;
+    setCategoryTitle(newCategoryId);
+    fetchBooks(currentPage, newCategoryId);
+    history.pushState(null, "", `?categoryId=${newCategoryId}`);
+  }
+
+  // 페이지 로드 시 초기 설정
+  const urlParams = new URLSearchParams(window.location.search);
+  const categoryId = urlParams.get('categoryId') || "55890";
+  setCategoryTitle(categoryId);
+
+  // 카테고리 트리 렌더링
+  const categoryTreeContainer = document.getElementById('category-tree');
+  renderCategoryTree(categoryTreeContainer, categoryTreeData);
+
+  // 책 목록 및 페이징 처리
+  function fetchBooks(page, categoryId) {
+    currentPage = page;
+
+    fetch(`/api/category?categoryId=${categoryId}&page=${page}&size=${booksPerPage}`)
+      .then(response => response.json())
+      .then(data => {
+        const bookList = document.getElementById('book-list');
+        bookList.innerHTML = '';
+
+        const books = data.books || [];
+        const totalBooks = data.totalResults || 0;
+
+        books.forEach(book => {
+          const rating = parseFloat(book.rating) || 0;  // 별점 정보 처리
+          const row = `
+            <div class="book-item">
+              <a href="/bookdetail?isbn=${book.isbn13 || book.isbn}">
+                <img src="${book.cover}" alt="${book.title}" class="img-thumbnail">
+              </a>
+              <div class="book-info">
+                <a href="/bookdetail?isbn=${book.isbn13 || book.isbn}" class="book-title">${book.title}</a>
+                <div class="book-author">${book.author} | ${book.publisher}</div>
+                <div class="book-pubdate">출간일: ${book.pubDate || 'N/A'}</div>
+                <div class="book-rating">
+                  ${generateStars(rating)}
+                  <span class="rating-score">${rating.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          bookList.insertAdjacentHTML('beforeend', row);
+        });
+
+        generatePagination(totalBooks, booksPerPage, categoryId);
+        window.scrollTo(0, 0); // 최상단으로 스크롤 이동
+      })
+      .catch(error => console.error('Error fetching books:', error));
+  }
+
+  function generatePagination(totalBooks, booksPerPage, categoryId) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    const totalPages = Math.ceil(totalBooks / booksPerPage);
+
+    for (let i = 1; i <= totalPages; i++) {
+      const pageItem = document.createElement('li');
+      pageItem.classList.add('page-item');
+      const pageLink = document.createElement('a');
+      pageLink.classList.add('page-link');
+      pageLink.href = '#';
+      pageLink.dataset.page = i;
+      pageLink.textContent = i;
+
+      if (i === currentPage) {
+        pageItem.classList.add('active');
+      }
+
+      pageLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        currentPage = i;
+        fetchBooks(currentPage, categoryId);
+      });
+
+      pageItem.appendChild(pageLink);
+      pagination.appendChild(pageItem);
+    }
+  }
+
+  // 별점 생성 함수
+  function generateStars(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating / 2) {
+        stars += '<i class="bi bi-star-fill"></i>';
+      } else if (i - 0.5 <= rating / 2) {
+        stars += '<i class="bi bi-star-half"></i>';
+      } else {
+        stars += '<i class="bi bi-star"></i>';
+      }
+    }
+    return stars;
+  }
+
+  // 페이지 로드 시 책 목록 로드
+  fetchBooks(currentPage, categoryId);
+</script>
+
+</body>
+</html>

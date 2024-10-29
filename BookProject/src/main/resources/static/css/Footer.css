@@ -1,0 +1,66 @@
+/* 푸터 스타일 */
+.footer {
+    background-color: #f5f5f5;
+    padding: 40px 0;
+    font-size: 14px;
+    color: #333;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between; /* 양쪽 끝에 배치 */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.company-info {
+    width: 50%;
+    text-align: left;
+}
+
+.company-info h3, .customer-center h3 {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.company-info p, .customer-center p {
+    margin: 3px 0;
+    color: #666;
+}
+
+.customer-center {
+    text-align: left; /* 고객센터 정보는 왼쪽 정렬 유지 */
+    margin-left: auto; /* 오른쪽 끝으로 이동 */
+    display: flex;
+    flex-direction: column;
+}
+
+.customer-links {
+    margin-top: 10px;
+}
+
+.customer-links button {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 12px;
+}
+
+.customer-links button:hover {
+    background-color: #f0f0f0;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer-bottom p {
+    color: #999;
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+                xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사구팔구</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css">
+    <link th:href="@{/css/Header.css}" rel="stylesheet" />
+    <link th:href="@{/css/Footer.css}" rel="stylesheet" />
+    <script th:src="@{/js/Websocket.js}"></script>
+    <script th:src="@{/js/chat.js}"></script>
+</head>
+<style>
+    table {
+       <!-- font-family: futura-pt, sans-serif;
+        font-weight: 400;
+        font-style: normal;-->
+        border-collapse: collapse;
+        width: 100%;
+        border-radius: 15px;
+        overflow:hidden
+
+    }
+    .table tr {
+        border-bottom: 1px solid #ddd; /* 테두리 가볍게 설정 */
+    }
+
+    .btn {
+       background-color: #86AB89;
+    }
+</style>
+<body>
+<div th:replace="~{Front/Header :: header}"></div>
+<!--<div class="col-9 mx-auto pt-3">-->
+    <h3><b>문의게시판</b></h3>
+    <hr>
+    <div class="row ">
+        <!-- 검색부분 -->
+        <form>
+            <div class="input-group ms-auto" style="width: 400px;">
+                <select name="searchField" class="form-control">
+                    <option value="title" th:selected="${searchField == 'title'}">제목</option>
+                    <option value="content" th:selected="${searchField == 'content'}">내용</option>
+                    <option value="nick" th:selected="${searchField == 'nick'}">작성자</option>
+                </select>
+                <input type="text" name="searchWord" class="form-control" style="width: 150px;"/>
+                <button class="btn btn-outline-secondary" type="submit" style="background-color: white;"><i class="bi bi-search" style='font-size:15px'></i></button>
+            </div>
+        </form>
+    </div>
+    <div class="row mt-3 mx-1">
+        <!-- 게시판리스트부분 -->
+        <div class="container">
+            <table class="table table-borderless table-hover ">
+                <colgroup>
+                    <col width="60px"/>
+                    <col width="*" />
+                    <col width="100px" />
+                    <col width="100px" />
+                    <col width="100px" />
+                    <col width="80px" />
+                    <col width="80px" />
+                </colgroup>
+                <thead>
+                <tr class="text-center" style="background-color: #C1E2A4; ">
+                    <th>번호</th>
+                    <th>제목</th>
+                    <th>작성자</th>
+                    <th>작성일</th>
+                    <th>답변여부</th>
+                    <th>조회수</th>
+                    <th>파일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(list)}">
+                    <td class="text-center" colspan="7">
+                        등록된 게시글이 없습니다.
+                    </td>
+                </tr>
+                <tr th:each="inquiryBoard, iterStat  : ${list}">
+                    <td class="text-center" th:text="${totalCount - ((currentPage -1) * pageSize) - iterStat.index}">글번호</td>
+                    <!-- 게스트 -->
+                    <td class="text-left"> <!-- 제목 -->
+                        <div sec:authorize="isAnonymous()">
+                            <!-- 비밀글일 때 잠금 아이콘 표시 -->
+                            <span th:if="${inquiryBoard.pass != null}"><i class="bi bi-lock-fill"></i></span>
+                            <!-- 답변 글이면 [답변] 표시 -->
+                            <span th:text="${inquiryBoard.group}==0 ? '' : '▶ [답변] '"></span>
+                            <!-- 일반 글 일 때 -->
+                            <a th:if="${inquiryBoard.pass == null}" th:text="${inquiryBoard.title}" href="#" th:onclick="|guest();|"></a>
+                            <!-- 비밀글 + 작성자일 때 -->
+                            <a th:if ="${inquiryBoard.pass != null and inquiryBoard.nick == loginNick}" th:text="${inquiryBoard.title}" th:href="@{inquiryboard/pass(qidx=${inquiryBoard.qidx})}"></a>
+                            <!-- 비밀글 + 다른 사용자일 때 -->
+                            <a th:if ="${inquiryBoard.pass != null and inquiryBoard.nick != loginNick}" th:text="${inquiryBoard.title}" href="#" th:onclick="|noPass();|"></a>
+                        </div>
+                        <!-- 회원 -->
+                        <div sec:authorize="hasRole('ROLE_USER')">
+                            <!-- 비밀글일 때 잠금 아이콘 표시 -->
+                            <span th:if="${inquiryBoard.pass != null}"><i class="bi bi-lock-fill"></i></span>
+                            <!-- 답변 글이면 [답변] 표시 -->
+                            <span th:text="${inquiryBoard.group}==0 ? '' : '▶ [답변] '"></span>
+                            <!-- 일반 글 일 때 -->
+                            <a th:if="${inquiryBoard.pass == null}" th:text="${inquiryBoard.title}" th:href="@{inquiryboard/view(qidx=${inquiryBoard.qidx})}"></a>
+                            <!-- 비밀글 + 작성자일 때 -->
+                            <a th:if ="${inquiryBoard.pass != null and inquiryBoard.nick == loginNick}" th:text="${inquiryBoard.title}" th:href="@{inquiryboard/pass(qidx=${inquiryBoard.qidx})}"></a>
+                            <!-- 비밀글 + 다른 사용자일 때(회원 일 때 내가 남긴 비밀 글의 답글을 볼때) -->
+                            <a th:if ="${inquiryBoard.pass != null and inquiryBoard.nick != loginNick}" th:text="${inquiryBoard.title}" th:href="@{inquiryboard/pass(qidx=${inquiryBoard.qidx})}"></a>
+                        </div>
+                        <!-- 관리자 -->
+                        <div sec:authorize="hasRole('ROLE_ADMIN')">
+                            <!-- 비밀글일 때 잠금 아이콘 표시 -->
+                            <span th:if="${inquiryBoard.pass != null}"><i class="bi bi-lock-fill"></i></span>
+                            <!-- 답변 글이면 [답변] 표시 -->
+                            <span th:text="${inquiryBoard.group}==0 ? '' : '▶ [답변] '"></span>
+                            <!-- 일반 글, 비밀 글 일 때 -->
+                            <a th:text="${inquiryBoard.title}" th:href="@{inquiryboard/view(qidx=${inquiryBoard.qidx})}"></a>
+                        </div>
+                    </td>
+                    <td class="text-center" th:text="${inquiryBoard.nick}">작성자</td>
+                    <td class="text-center">
+                        <span th:if="${inquiryBoard.createDate.isBefore(inquiryBoard.updateDate)}" th:text="${#temporals.format(inquiryBoard.updateDate, 'yy. MM. dd')}"></span>
+                        <span th:unless="${inquiryBoard.createDate.isBefore(inquiryBoard.updateDate)}" th:text="${#temporals.format(inquiryBoard.createDate, 'yy. MM. dd')}"></span>
+                    </td>
+                    <td class="text-center" th:text="${(inquiryBoard.group == 0 && inquiryBoard.responses == 1) ? '답변완료' :
+                                                       (inquiryBoard.group == 0 && inquiryBoard.responses == 0) ? '답변대기' :
+                                                       (inquiryBoard.group != 0 && inquiryBoard.responses == 0) ? '' :
+                                                       ''}">
+                    </td>
+                    <td class="text-center" th:text="${inquiryBoard.viewCount}">조회수</td>
+                    <td class="text-center" th:if="${inquiryBoard.ofile != null}"><i class="bi bi-paperclip"></i></td><!-- 파일첨부 -->
+                </tr>
+                </tbody>
+            </table>
+            <!-- 각종 버튼 부분 게스트 -->
+            <div class="col d-flex justify-content-end" sec:authorize="isAnonymous()">
+                <button type="button" class="btn text-white" onclick="location.href='/inquiryboard';">리스트보기</button>
+                &nbsp;&nbsp;
+                <button type="button" class="btn text-white" th:onclick="|guest();|">글등록</button>
+                &nbsp;&nbsp;
+            </div>
+            <!-- 각종 버튼 부분 회원, 관리자 -->
+            <div class="col d-flex justify-content-end" sec:authorize="hasAnyRole('ROLE_USER', 'ROLE_ADMIN')">
+                <button type="button" class="btn text-white" onclick="location.href='/inquiryboard';">리스트보기</button>
+                &nbsp;&nbsp;
+                <button type="button" class="btn text-white" onclick="location.href='/inquiryboard/writeform';">글등록</button>
+                &nbsp;&nbsp;
+            </div>
+            <!-- 페이징 부분 -->
+            <div th:if="${!#lists.isEmpty(list)}">
+                <nav aria-label="Page navigation example" class="d-flex justify-content-center">
+                    <ul class="pagination">
+                        <li th:if="${currentPage > 1} ? 'disabled'" class="page-item">
+                            <a class="page-link" th:href="@{/inquiryboard(page=${currentPage - 1}, searchField=${searchField}, searchWord=${searchWord})}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <li th:each="page : ${#numbers.sequence(currentGroup * 5 + 1, totalPage)}"
+                            th:if="${page <= (currentGroup + 1) * 5}"
+                            th:class="${page == currentPage} ? 'active' : ''">
+                            <a th:href="@{/inquiryboard(page=${page}, searchField=${searchField}, searchWord=${searchWord})}" th:text="${page}" class="page-link"></a>
+                        </li>
+                        <!-- 다음 버튼: 현재 페이지가 마지막 페이지일 경우 비활성화 -->
+                        <li th:if="${currentPage < totalPage}" class="page-item">
+                            <a class="page-link" th:href="@{/inquiryboard(page=${currentPage + 1}, searchField=${searchField}, searchWord=${searchWord})}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div> <!--컨테이너 끝-->
+    </div>
+</div>
+&nbsp;
+<div th:replace="~{Front/Footer :: footer}"></div>
+</body>
+</html>
+
+<script type="text/javascript">
+    function noPass() // 작성자가 아닌 다른 이용자가 글을 눌렀을때
+    {
+        alert("작성자 본인만 열람이 가능합니다.");
+    }
+
+    function guest() // 게스트가 일반 글을 클릭 할 때
+    {
+        alert("로그인 후 이용 가능합니다.");
+        window.location.href = "../guest/loginform";
+    }
+</script>

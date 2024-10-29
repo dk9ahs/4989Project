@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<footer class="footer">
+    <div class="footer-content">
+        <div class="company-info">
+            <h3>(주)TJOEUN BOOK</h3>
+            <p>경기 고양시 일산동구 중앙로1275번길 38-10 우림로데오스위트 2층 201호</p>
+            <p>이메일: tjoeun@tjoeun.co.kr</p>
+            <p>&copy; TJOEUN Communication. All Rights Reserved.</p>
+        </div>
+        <div class="customer-center">
+            <h3>고객센터</h3>
+            <p>0507-1400-1777</p>
+            <div class="customer-links">
+<!--                <span sec:authorize="hasRole('USER') or hasRole('ADMIN')">-->
+<!--                    <button sec:authorize="hasRole('USER')" onclick="chatPopup();">1:1 문의</button>-->
+<!--                    <button sec:authorize="hasRole('ADMIN')" onclick="chatPoplist();">1:1 문의</button>-->
+<!--                </span>-->
+                <button sec:authorize="hasRole('USER')" onclick="chatPopup();">1:1 문의</button>
+                <button sec:authorize="hasRole('ADMIN')" onclick="chatPoplist();">1:1 문의</button>
+                <button sec:authorize="isAnonymous()" onclick="loginForm();">1:1 문의</button>
+                <button>FAQ</button>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2024 TJOUEN BOOK. All rights reserved.</p>
+    </div>
+</footer>
+
+
+

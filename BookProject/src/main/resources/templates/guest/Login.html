@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사구팔구</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* 폰트 정의 */
+        @font-face {
+            font-family: 'SUIT';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        .brand-font-700 {
+            font-family: 'SUIT', sans-serif;
+            font-weight: 700;
+            font-size: 29px;
+        }
+
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            margin: 0;
+            background-color: #ffefba; /* 산뜻한 파스텔톤 배경색 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #f5f5f5; /* 컨테이너 배경색 */
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 가벼운 그림자 효과 */
+        }
+
+        .logo {
+            margin-bottom: 40px;
+            font-size: 24px;
+            color: #343a40;
+        }
+
+        .login-form {
+            margin-top: 30px;
+        }
+
+        .mb-3 {
+            margin-bottom: 15px;
+        }
+
+        .login-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            background-color: #343a40;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .links {
+            color: black;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .links a {
+            color: black;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+            .social-login {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* 아이콘 간의 간격을 조정합니다 */
+        }
+
+        .social-login img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .social-login img:hover {
+            transform: scale(1.1);
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="login-page">
+        <h2 class="brand-font-700 centered-text">
+            <a href="/" style="color: #4e4f4e; text-decoration: none;">중고도서</a>
+        </h2>
+
+        <form class="login-form" id="login-form" th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label for="login-id" class="form-label">아이디</label>
+                <input type="text" class="form-control" id="login-id" name="username" required>
+            </div>
+            <br />
+            <div class="mb-3">
+                <label for="login-pwd" class="form-label">비밀번호</label>
+                <input type="password" class="form-control" id="login-pwd" name="password" required>
+            </div>
+            <br />
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-secondary login-btn">로그인</button>
+            </div>
+        </form>
+
+
+        <!-- 소셜 로그인 버튼들 -->
+        <div class="social-login mt-4">
+            <!-- Google 로그인 버튼 -->
+            <a th:href="@{/oauth2/authorization/google}">
+                <img src="/images/Google.png" alt="Google 로그인">
+            </a>
+
+            <!-- Naver 로그인 버튼 -->
+            <a th:href="@{/oauth2/authorization/naver}">
+                <img src="/images/Naver.png" alt="Naver 로그인">
+            </a>
+
+            <!-- Kakao 로그인 버튼 -->
+            <a th:href="@{/oauth2/authorization/kakao}">
+                <img src="/images/Kakao.png" alt="Kakao 로그인">
+            </a>
+        </div>
+
+        <div class="text-center mt-3 links">
+            <a th:href="@{/find}">아이디 / 비밀번호 찾기</a>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <a th:href="@{/signup}">회원가입</a>
+        </div>
+    </div>
+</div>
+
+<!--//회원가입,회원수정, 회원탈퇴 알림-->
+<script>
+    var successMessage = [[${successMessage != null}]] ? '[[${successMessage}]]' : '';
+    if (successMessage !== '') {
+        alert(successMessage);
+    }
+
+    var updateSuccess = [[${updateSuccess != null}]] ? '[[${updateSuccess}]]' : '';
+    if (updateSuccess !== '') {
+        alert(updateSuccess);
+    }
+
+    var withdrawSuccess = [[${withdrawSuccess != null}]] ? '[[${withdrawSuccess}]]' : '';
+    if (withdrawSuccess !== '') {
+        alert(withdrawSuccess);
+    }
+
+
+</script>
+<script th:inline="javascript">
+<!--    /* 서버에서 전달된 errorMessage 값을 자바스크립트로 안전하게 전달 */-->
+<!--         var errorMessage = /*[[${errorMessage != null ? '"' + errorMessage + '"' : 'null'}]]*/;-->
+<!--    var lockedMessage = /*[[${lockedMessage != null ? '"' + lockedMessage + '"' : 'null'}]]*/;-->
+
+<!--    window.onload = function() {-->
+<!--        if (lockedMessage !== "null") {-->
+<!--            alert(lockedMessage);  // 계정이 잠겼다는 메시지-->
+<!--        } else if (errorMessage !== "null") {-->
+<!--            alert(errorMessage);  // 일반적인 로그인 실패 메시지-->
+<!--        }-->
+<!--    }-->
+    const urlParams = new URLSearchParams(window.location.search);
+    const locked = urlParams.get('locked');
+    const error = urlParams.get('error');
+
+    if (locked === 'true') {
+        alert("계정이 잠겼습니다. 관리자에게 문의하세요.");
+    } else if (error === 'true') {
+        alert("아이디 또는 비밀번호가 잘못되었습니다.");
+    }
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

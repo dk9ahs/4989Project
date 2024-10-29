@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사구팔구</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css">
+    <link th:href="@{/css/Header.css}" rel="stylesheet" />
+    <link th:href="@{/css/Footer.css}" rel="stylesheet" />
+    <script th:src="@{/js/Websocket.js}"></script>
+    <script th:src="@{/js/chat.js}"></script>
+</head>
+<style>
+<!--    body {-->
+<!--        margin: 0;-->
+<!--        padding: 0;-->
+<!--        display: flex; /* 페이지 중앙 정렬을 위해 flexbox 사용 */-->
+<!--        justify-content: center; /* 가로 중앙 정렬 */-->
+<!--        align-items: flex-start; /* 세로 상단 정렬 */-->
+<!--        min-height: 100vh; /* 최소 높이를 100vh로 설정 */-->
+<!--        height: auto; /* 높이는 자동으로 설정 */-->
+<!--        background-color: #f8f9fa; /* 배경색 추가 */-->
+<!--    }-->
+    table {
+        font-weight: 400;
+        border-collapse: collapse;
+        width: 100%;
+<!--            border-radius: 15px;-->
+<!--            overflow:hidden-->
+
+        border-collapse: collapse;
+        box-shadow: 0 0 0 1px #C0C78C;
+        border-radius: 8px;
+        border: hidden;
+    }
+
+<!--    .container {-->
+<!--        margin: auto; /* 가로 중앙 정렬 */-->
+<!--        background-color: white; /* 배경색 추가 */-->
+<!--        padding: 20px; /* 내부 여백 */-->
+<!--        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 추가 */-->
+<!--        border-radius: 8px; /* 모서리를 둥글게 */-->
+<!--    }-->
+
+    .btn {
+       background-color: #86AB89;
+    }
+</style>
+<body>
+<div th:replace="~{Front/Header :: header}"></div>
+    <div class="col-9 mx-auto pt-3">
+        <div class="row mt-3 mx-1">
+            <!-- 게시판리스트부분 -->
+            <div class="container">
+            <h3><b>문의게시판 - <small>답변 글쓰기</small></b></h3>
+                <form th:action="@{'/inquiryboard/replywrite?qidx=' + ${inquiryBoardDTO.qidx}}" method="post" onsubmit="return checkForm(this)" enctype="multipart/form-data">
+                    <table class="table table-bordered">
+                        <colgroup>
+                            <col width="20%"/>
+                            <col width="30%"/>
+                            <col width="20%"/>
+                            <col width="*"/>
+                        </colgroup>
+                        <tbody>
+                        <tr>
+                            <th class="text-center" style="vertical-align:middle;">작성자</th>
+                            <td colspan="3">
+                                <input type="text" class="form-control" style="width:200px;" name="nick" th:value="${adminNick}" readonly/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-center" style="vertical-align:middle;">패스워드</th>
+                            <td colspan="3">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="password" class="form-control" id="pass" style="width:200px;" name="pass" th:value="${inquiryBoardDTO.pass}" maxlength='5' oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" readonly/>&nbsp;&nbsp; <small>* 문의 글의 패스워드와 동일 합니다.</small>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-center" style="vertical-align:middle;">제목</th>
+                            <td colspan="3">
+                                <input type="text" class="form-control" name="title" th:value="${inquiryBoardDTO.title}"/>
+                            </td>
+                        </tr>
+                        <tr >
+                            <th class="text-center"
+                                style="vertical-align:middle;">내용</th>
+                            <td colspan="3">
+                                <textarea rows="9" class="form-control" name="content"></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-center" style="vertical-align:middle;">첨부파일</th>
+                            <td colspan="3">
+                                <input type="file" class="form-control" name="file"/>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="col d-flex justify-content-end">
+                        <!-- 각종 버튼 부분 -->
+                        <button type="button" class="btn text-white" onclick="location.href='/inquiryboard';">리스트보기</button>
+                        &nbsp;&nbsp;
+                        <button type="submit" class="btn text-white">작성완료</button>
+                        &nbsp;&nbsp;
+                        <button type="reset" class="btn text-white">Reset</button>
+                        &nbsp;&nbsp;
+                    </div>
+                </form>
+            </div> <!--컨테이너 끝-->
+        </div>
+    </div>
+    &nbsp;
+<div th:replace="~{Front/Footer :: footer}"></div>
+<script type="text/javascript">
+    function checkForm(form)
+    {
+        if(form.title.value == ""){
+            alert("제목을 입력 하세요")
+            form.title.focus();
+            return false;
+        }
+        if(form.content.value == ""){
+            alert("내용을 입력 하세요")
+            form.content.focus();
+            return false;
+        }
+    }
+</script>
+</body>
+</html>

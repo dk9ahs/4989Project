@@ -1,0 +1,28 @@
+diff a/BookProject/src/main/generated/com/book/BookProject/inquiryboard/InquiryBoardMapperImpl.java b/BookProject/src/main/generated/com/book/BookProject/inquiryboard/InquiryBoardMapperImpl.java	(rejected hunks)
+@@ -22,20 +22,19 @@
+         InquiryBoardDTO inquiryBoardDTO = new InquiryBoardDTO();
+ 
+         inquiryBoardDTO.setQidx( inquiryBoard.getQidx() );
+-        inquiryBoardDTO.setParentIdx( inquiryBoard.getParentIdx() );
+-        inquiryBoardDTO.setParentId( inquiryBoard.getParentId() );
+-        inquiryBoardDTO.setNick( inquiryBoard.getNick() );
++        inquiryBoardDTO.setOrigin( inquiryBoard.getOrigin() );
++        inquiryBoardDTO.setGroup( inquiryBoard.getGroup() );
++        inquiryBoardDTO.setLayer( inquiryBoard.getLayer() );
+         inquiryBoardDTO.setResponses( inquiryBoard.getResponses() );
++        inquiryBoardDTO.setNick( inquiryBoard.getNick() );
+         inquiryBoardDTO.setTitle( inquiryBoard.getTitle() );
+         inquiryBoardDTO.setContent( inquiryBoard.getContent() );
+         inquiryBoardDTO.setPass( inquiryBoard.getPass() );
+         inquiryBoardDTO.setCreateDate( inquiryBoard.getCreateDate() );
+         inquiryBoardDTO.setUpdateDate( inquiryBoard.getUpdateDate() );
+         inquiryBoardDTO.setViewCount( inquiryBoard.getViewCount() );
+-        inquiryBoardDTO.setLikeCount( inquiryBoard.getLikeCount() );
+-        inquiryBoardDTO.setOFile( inquiryBoard.getOFile() );
+-        inquiryBoardDTO.setSFile( inquiryBoard.getSFile() );
+-        inquiryBoardDTO.setDownCount( inquiryBoard.getDownCount() );
++        inquiryBoardDTO.setOfile( inquiryBoard.getOfile() );
++        inquiryBoardDTO.setSfile( inquiryBoard.getSfile() );
+ 
+         return inquiryBoardDTO;
+     }

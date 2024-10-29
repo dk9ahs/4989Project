@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사구팔구</title>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/Header.css" />
+  <link rel="stylesheet" href="/css/Footer.css" />
+  <script th:src="@{/js/Websocket.js}"></script>
+  <script th:src="@{/js/chat.js}"></script>
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .user-info-container {
+      background-color: #fff;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      margin-top: 50px;
+    }
+    h4 {
+      font-weight: bold;
+      color: #343a40;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .user-info-table {
+      width: 100%;
+      margin-bottom: 1rem;
+      color: #212529;
+    }
+    .user-info-table th, .user-info-table td {
+      padding: 0.75rem;
+      vertical-align: middle;
+      text-align: center;
+    }
+    .user-info-table th {
+      background-color: #007bff;
+      color: white;
+      font-size: 0.95rem;
+    }
+    .user-info-table td {
+      font-size: 0.9rem;
+      color: #495057;
+    }
+    .user-action-btn {
+      min-width: 130px;
+      font-size: 0.9rem;
+      margin: 5px;
+    }
+    .user-action-btn.btn-danger,
+    .user-action-btn.btn-success,
+    .user-action-btn.btn-warning {
+      color: white;
+    }
+    .action-buttons {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div th:replace="/Front/Header :: header"></div>
+
+<div class="user-info-container container col-10 col-md-8 col-lg-6 mx-auto pt-4 mt-4">
+  <h4>관리자 페이지 - <small class="text-muted">회원 상세 정보</small></h4>
+
+  <table class="user-info-table table table-bordered table-hover">
+    <tbody>
+    <tr>
+      <th>아이디</th>
+      <td th:text="${user.id}"></td>
+    </tr>
+    <tr>
+      <th>닉네임</th>
+      <td th:text="${user.nick}"></td>
+    </tr>
+    <tr>
+      <th>이름</th>
+      <td th:text="${user.name}"></td>
+    </tr>
+    <tr>
+      <th>전화번호</th>
+      <td th:text="${user.phone}"></td>
+    </tr>
+    <tr>
+      <th>이메일</th>
+      <td th:text="${user.email}"></td>
+    </tr>
+    <tr>
+      <th>가입일</th>
+      <td th:text="${#temporals.format(user.createDate, 'yyyy-MM-dd')}"></td>
+    </tr>
+    <tr>
+      <th>권한</th>
+      <td th:text="${user.authority}"></td>
+    </tr>
+    <tr>
+      <th>계정 상태</th>
+      <td th:text="${user.accountLocked == 1 ? '사용불가' : '사용가능'}"></td>
+    </tr>
+    </tbody>
+  </table>
+
+  <div class="action-buttons mt-4">
+    <form th:action="@{/admin/lockAccount}" method="post" th:if="${user.accountLocked == 0}" style="display: inline-block;">
+      <input type="hidden" name="id" th:value="${user.id}"/>
+      <button class="user-action-btn btn btn-danger" type="submit">계정 잠금 설정</button>
+    </form>
+
+    <form th:action="@{/admin/unlockAccount}" method="post" th:if="${user.accountLocked == 1}" style="display: inline-block;">
+      <input type="hidden" name="id" th:value="${user.id}"/>
+      <button class="user-action-btn btn btn-success" type="submit">계정 잠금 해제</button>
+    </form>
+
+    <form th:action="@{/admin/deleteUser}" method="post" style="display: inline-block;">
+      <input type="hidden" name="id" th:value="${user.id}"/>
+      <button class="user-action-btn btn btn-warning" type="submit" onclick="return confirm('정말로 회원을 삭제하시겠습니까?');">회원 삭제</button>
+    </form>
+
+    <a th:href="@{/admin/list}" class="user-action-btn btn btn-primary">회원 목록으로</a>
+  </div>
+</div>
+
+&nbsp;
+<div th:replace="/Front/Footer :: footer"></div>
+</body>
+</html>

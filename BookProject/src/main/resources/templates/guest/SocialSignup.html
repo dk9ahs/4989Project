@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 메타 정보 및 CSS/JS 링크 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+
+
+    <script>
+
+        var isNickChecked = false;  // 닉네임 중복 체크 여부
+
+                // 닉네임 중복 체크
+                function fn_NickCheck() {
+                    var nick = $('#nick').val();
+
+                    if (nick.length < 3 || nick.length > 10) {
+                    alert("닉네임은 3~10자 이내로 입력해주세요.");
+                    return;
+                }
+
+                $.ajax({
+                    url: "/NickCheck",
+                    type: "POST",
+                    data: JSON.stringify({nick: nick}),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+
+                success: function (data) {
+                    if (data.exists) {
+                        alert("이미 사용중인 닉네임입니다.");
+                        $('#nick').addClass("has-error");
+                        $('#nick').removeClass("has-success");
+                        isNickChecked = false;  // 중복 체크 실패
+                    } else {
+                        alert("사용 가능한 닉네임입니다.");
+                        $('#nick').addClass("has-success");
+                        $('#nick').removeClass("has-error");
+                        isNickChecked = true;  // 중복 체크 성공
+                    }
+                },
+                error: function() {
+                    alert("오류가 발생했습니다. 다시 시도해주세요.");
+                }
+            });
+        }
+
+    </script>
+    <!--주소api-->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script>
+        function sample6_execDaumPostcode() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    var addr = '';
+                    var extraAddr = '';
+
+                    if (data.userSelectedType === 'R') {
+                        addr = data.roadAddress;
+                    } else {
+                        addr = data.jibunAddress;
+                    }
+
+                    if(data.userSelectedType === 'R'){
+                        if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                            extraAddr += data.bname;
+                        }
+                        if(data.buildingName !== '' && data.apartment === 'Y'){
+                            extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                        }
+                        if(extraAddr !== ''){
+                            extraAddr = ' (' + extraAddr + ')';
+                        }
+                    }
+
+                    document.getElementById('zipcode').value = data.zonecode;
+                    document.getElementById("address").value = addr + extraAddr;
+                    document.getElementById("detailAddress").focus();
+                }
+            }).open();
+        }
+    </script>
+
+    <script>
+        function check_recaptcha(event){
+            var v = grecaptcha.getResponse();
+            if (v.length == 0) {
+                alert("'로봇이 아닙니다.'를 체크해주세요.");
+                event.preventDefault();  // 페이지 리로드 방지
+                return false;
+            } else {
+                return true;
+            }
+        }
+    </script>
+
+    <!-- 스타일 -->
+    <style>
+        /* 기존 스타일 그대로 유지 */
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            margin: 0;
+            background-color: #343a40;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: whitesmoke;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 520px;
+            width: 100%;
+            margin-bottom: 100px;
+        }
+        .signup-page {
+            text-align: center;
+            width: 100%;
+        }
+        .logo {
+            background-color: #343a40;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: aliceblue;
+        }
+        .signup-form .input-group {
+            display: flex;
+            align-items: center;
+        }
+        .signup-form .input-group label {
+            width: 120px;
+            text-align: right;
+        }
+        .signup-form .input-group input[type="text"],
+        .signup-form .input-group input[type="email"],
+        .signup-form .input-group input[type="password"],
+        .signup-form .input-group input[type="tel"],
+        .signup-form .input-group select {
+            padding: 5px;
+            border: 1px solid lightgray;
+            width: calc(80% - 180px);
+        }
+        .signup-form .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .signup-form .social-icons button.naver {
+            background-color: #03C75A;
+        }
+        .signup-form .social-icons button.kakao {
+            background-color: #FEE500;
+        }
+        .signup-form .social-icons button.google {
+            background-color: #f08080;
+        }
+        .signup-form .social-icons button.facebook {
+            background-color: #4267B2;
+        }
+        .signup-form .social-icons button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .signup-form .social-icons img {
+            width: 20px;
+            height: 20px;
+        }
+        .action-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .links a {
+            color: blue;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .text-center a {
+            color: black;
+        }
+        .text-center a:hover {
+            text-decoration: underline;
+            color: darkred;
+        }
+        .form-text {
+            white-space: nowrap;
+            overflow: visible;
+        }
+        .phone-input {
+            padding-left: 2px;
+            padding-right: 2px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        /* 폰트 설정 */
+        @font-face {
+            font-family: 'SUIT';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+        .brand-font-700 {
+            font-family: 'SUIT', sans-serif;
+            font-weight: 700;
+            font-size: 29px;
+        }
+        .centered-text {
+            text-align: center;
+        }
+        .example-text {
+            margin: 0;
+        }
+        /* 기타 스타일 */
+        /* ... */
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <!-- 서버에서 전달된 오류 메시지 출력 -->
+    <div th:if="${not #lists.isEmpty(errMessages)}" class="alert alert-danger">
+        <ul>
+            <li th:each="error : ${errMessages}" th:text="${error.defaultMessage}"></li>
+        </ul>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <form class="signup-form" id="signup-form" method="post" th:action="@{/guest/SocialSignup}" th:object="${userDTO}">
+        <!-- 닉네임 -->
+        <div class="mb-3 row">
+            <label for="nick" class="col-sm-3 col-form-label">닉네임</label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" id="nick" th:field="*{nick}" required>
+                <small class="form-text text-muted">닉네임은 3~10자 이내로 입력해주세요.</small>
+            </div>
+            <div class="col-sm-3">
+                <button type="button" onclick="fn_NickCheck();" id="NickCheck" class="btn btn-secondary w-100">중복 확인</button>
+            </div>
+        </div>
+
+
+        <!-- 이름 -->
+        <div class="mb-3 row">
+            <label for="name" class="col-sm-3 col-form-label">이름</label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" id="name" th:field="*{name}" required>
+            </div>
+        </div>
+
+        <!-- 전화번호 -->
+        <div class="mb-3 row">
+            <label for="phone" class="col-sm-3 col-form-label">전화 번호</label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" id="phone" th:field="*{phone}" required/>
+            </div>
+        </div>
+
+        <!-- 우편번호 -->
+        <div class="mb-3 row">
+            <label for="zipcode" class="col-sm-3 col-form-label">우편번호</label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" id="zipcode" th:field="*{zipcode}" required>
+            </div>
+            <div class="col-sm-3">
+                <button type="button" class="btn btn-secondary w-100" onclick="sample6_execDaumPostcode()">주소 찾기</button>
+            </div>
+        </div>
+
+        <!-- 주소 -->
+        <div class="mb-3 row">
+            <label for="address" class="col-sm-3 col-form-label">주소</label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" id="address" th:field="*{address}" required>
+            </div>
+        </div>
+
+        <!-- 상세 주소 -->
+        <div class="mb-3 row">
+            <label for="detailAddress" class="col-sm-3 col-form-label">상세 주소</label>
+            <div class="col-sm-6">
+                <input type="text" class="form-control" id="detailAddress" th:field="*{detailAddress}" required>
+            </div>
+        </div>
+
+        <div class="g-recaptcha" data-sitekey="6LdL8lkqAAAAAHz8mLPdrJXYxxK2mjO_P1FiyliF"></div>
+
+
+        <!-- 회원가입 버튼 -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-secondary w-100">회원가입</button>
+        </div>
+    </form>
+
+    <!-- 로그인 페이지로 돌아가기 링크 -->
+    <div class="text-center mt-3">
+        <a th:href="@{/login}">로그인 페이지로 돌아가기</a>
+    </div>
+</div>
+
+<!-- 서버에서 전달된 오류 메시지를 alert 창으로 표시 -->
+<div th:if="${errorMessage}">
+    <script>
+        alert([[${errorMessage}]]);
+    </script>
+</div>
+
+<!-- 주소 API -->
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+    function sample6_execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                var addr = '';
+                var extraAddr = '';
+
+                if (data.userSelectedType === 'R') {
+                    addr = data.roadAddress;
+                } else {
+                    addr = data.jibunAddress;
+                }
+
+                if (data.userSelectedType === 'R') {
+                    if (data.bname !== '' && /[동|로|가]$/g.test(data.bname)) {
+                        extraAddr += data.bname;
+                    }
+                    if (data.buildingName !== '' && data.apartment === 'Y') {
+                        extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                    }
+                    if (extraAddr !== '') {
+                        extraAddr = ' (' + extraAddr + ')';
+                    }
+                }
+
+                document.getElementById('signup-postcode').value = data.zonecode;
+                document.getElementById("signup-address").value = addr + extraAddr;
+                document.getElementById("signup-address-detail").focus();
+            }
+        }).open();
+    }
+
+
+</script>
+
+</body>
+</html>

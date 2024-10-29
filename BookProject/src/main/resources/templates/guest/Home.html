@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사구팔구</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/Header.css" />
+    <link rel="stylesheet" href="/css/Footer.css" />
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <script th:src="@{/js/Websocket.js}"></script>
+    <script th:src="@{/js/chat.js}"></script>
+
+    <style>
+        .swiper-container {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 300px;
+            height: 300px;
+        }
+
+        .swiper-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .swiper-button-next, .swiper-button-prev {
+            color: black;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .swiper-button-prev {
+            left: 10px;
+        }
+
+        .swiper-button-next {
+            right: 10px;
+        }
+
+        .swiper-pagination {
+            display: none;
+        }
+
+        /* 책 리스트 섹션 스타일 */
+        #book-list {
+            display: none; /* 처음에는 숨김 상태 */
+            margin-top: 20px;
+        }
+
+        #book-list li {
+            list-style-type: none;
+            margin-bottom: 10px;
+        }
+
+        .bestseller-btn, .newbook-btn {
+            cursor: pointer;
+            color: black;
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- Header는 Thymeleaf로 불러옴 -->
+<div th:replace="Front/Header :: header"></div>
+<div id="main-banner" class="d-flex justify-content-center align-items-center mb-4" style="height: 400px; background-color: #f8f9fa; overflow: hidden;">
+    <img src="/images/book.jpg" alt="Main Banner" style="width: 100%; height: auto; object-fit: cover;">
+</div>
+
+<!-- 베스트셀러 슬라이드 섹션 -->
+<div class="d-flex justify-content-start align-items-center">
+    <h2 class="me-2" style="font-weight: bold;">베스트셀러</h2>
+    <a href="/bestseller" class="d-flex align-items-center text-dark" style="font-weight: bold; font-size: 1.2rem; text-decoration: none;">
+        <span style="display: inline-block; transform: translateY(-2px); font-size: 1.5rem;">&#x276F;</span>
+    </a>
+</div>
+
+<div class="swiper-container">
+    <div class="swiper-wrapper" id="bestseller-slider">
+        <!-- 베스트셀러 책 이미지가 동적으로 추가됩니다. -->
+    </div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+</div>
+
+<!-- 신간 리스트 슬라이드 섹션 -->
+<div class="container mt-5">
+    <h2 class="me-2" style="font-weight: bold;">신간 리스트</h2>
+</div>
+
+<div class="swiper-container">
+    <div class="swiper-wrapper" id="newbook-slider">
+        <!-- 신간 책 이미지가 동적으로 추가됩니다. -->
+    </div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+</div>
+
+<!-- 주목할만한 신간 슬라이드 섹션 -->
+<div class="container mt-5">
+    <h2 class="me-2" style="font-weight: bold;">주목할만한 신간 리스트</h2>
+</div>
+
+<div class="swiper-container">
+    <div class="swiper-wrapper" id="notable-slider">
+        <!-- 주목할만한 신간 책 이미지가 동적으로 추가됩니다. -->
+    </div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+</div>
+
+<!-- 블로거 베스트셀러 슬라이드 섹션 -->
+<div class="container mt-5">
+    <h2 class="me-2" style="font-weight: bold;">블로거 베스트셀러 리스트</h2>
+</div>
+
+<div class="swiper-container">
+    <div class="swiper-wrapper" id="bloggerbest-slider">
+        <!-- 블로거 베스트셀러 책 이미지가 동적으로 추가됩니다. -->
+    </div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+</div>
+&nbsp;
+<!-- Footer도 Thymeleaf로 불러옴 -->
+<div th:replace="Front/Footer :: footer"></div>
+
+<!-- Swiper.js 추가 -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    // 베스트셀러 책 데이터를 슬라이더에 추가하는 코드
+    fetch('/book')
+        .then(response => response.json())
+        .then(books => {
+            const bestsellerSlider = document.getElementById('bestseller-slider');
+
+            books.forEach(book => {
+                const slide = document.createElement('div');
+                slide.classList.add('swiper-slide');
+                slide.innerHTML = `
+                    <a href="/bookdetail?isbn=${book.isbn13}">
+                        <img src="${book.cover}" alt="${book.title}" style="width: 200px; height: auto;">
+                    </a>`;
+                bestsellerSlider.appendChild(slide);
+            });
+
+            // Swiper.js 초기화 (베스트셀러 슬라이더)
+            new Swiper('.swiper-container', {
+                loop: true,
+                slidesPerView: 4,
+                spaceBetween: 20,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                autoplay: {
+                    delay: 3000,
+                    disableOnInteraction: false,
+                },
+            });
+        })
+        .catch(error => console.error('Error fetching bestsellers:', error));
+
+    // 신간 책 데이터를 슬라이더에 추가하는 코드
+    fetch('/newbook')
+        .then(response => response.json())
+        .then(books => {
+            const newbookSlider = document.getElementById('newbook-slider');
+
+            books.forEach(book => {
+                const slide = document.createElement('div');
+                slide.classList.add('swiper-slide');
+                slide.innerHTML = `
+                    <a href="/bookdetail?isbn=${book.isbn13}">
+                        <img src="${book.cover}" alt="${book.title}" style="width: 200px; height: auto;">
+                    </a>`;
+                newbookSlider.appendChild(slide);
+            });
+
+            // Swiper.js 초기화 (신간 슬라이더)
+            new Swiper('.swiper-container', {
+                loop: true,
+                slidesPerView: 4,
+                spaceBetween: 20,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                autoplay: {
+                    delay: 3000,
+                    disableOnInteraction: false,
+                },
+            });
+        })
+        .catch(error => console.error('Error fetching new books:', error));
+
+    // 주목할만한 신간 책 데이터를 슬라이더에 추가하는 코드
+    fetch('/notablebooks')
+        .then(response => response.json())
+        .then(books => {
+            const notableSlider = document.getElementById('notable-slider');
+
+            books.forEach(book => {
+                const slide = document.createElement('div');
+                slide.classList.add('swiper-slide');
+                slide.innerHTML = `
+                    <a href="/bookdetail?isbn=${book.isbn13}">
+                        <img src="${book.cover}" alt="${book.title}" style="width: 200px; height: auto;">
+                    </a>`;
+                notableSlider.appendChild(slide);
+            });
+
+            // Swiper.js 초기화 (주목할만한 신간 슬라이더)
+            new Swiper('.swiper-container', {
+                loop: true,
+                slidesPerView: 4,
+                spaceBetween: 20,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                autoplay: {
+                    delay: 3000,
+                    disableOnInteraction: false,
+                },
+            });
+        })
+        .catch(error => console.error('Error fetching notable books:', error));
+
+    // 블로거 베스트셀러 책 데이터를 슬라이더에 추가하는 코드
+    fetch('/blogbestbooks')
+        .then(response => response.json())
+        .then(books => {
+            const bloggerBestSlider = document.getElementById('bloggerbest-slider');
+
+            books.forEach(book => {
+                const slide = document.createElement('div');
+                slide.classList.add('swiper-slide');
+                slide.innerHTML = `
+                    <a href="/bookdetail?isbn=${book.isbn13}">
+                        <img src="${book.cover}" alt="${book.title}" style="width: 200px; height: auto;">
+                    </a>`;
+                bloggerBestSlider.appendChild(slide);
+            });
+
+            // Swiper.js 초기화 (블로거 베스트셀러 슬라이더)
+            new Swiper('.swiper-container', {
+                loop: true,
+                slidesPerView: 4,
+                spaceBetween: 20,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                autoplay: {
+                    delay: 3000,
+                    disableOnInteraction: false,
+                },
+            });
+        })
+        .catch(error => console.error('Error fetching blogger bestsellers:', error));
+</script>
+
+</body>
+</html>

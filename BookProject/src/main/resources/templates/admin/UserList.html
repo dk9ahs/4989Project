@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사구팔구 - 관리자 페이지</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/Header.css"/>
+    <link rel="stylesheet" href="/css/Footer.css"/>
+
+    <style>
+        body {
+            background-color: #f2f5f9;
+        }
+        .container {
+            background-color: #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+        }
+        .page-title {
+            font-weight: bold;
+            color: #5a5a5a;
+            margin-bottom: 30px;
+        }
+        .list-group a {
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 20px;
+        }
+        .list-group a.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .form-check-input {
+            margin-right: 10px;
+        }
+        .table thead th {
+            background-color: #007bff;
+            color: white;
+        }
+        .table tbody tr:hover {
+            background-color: #f1f4f8;
+        }
+        .badge {
+            font-size: 0.85rem;
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+        .pagination .page-link {
+            color: #007bff;
+        }
+        .pagination .active .page-link,
+        .pagination .page-link:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-outline-info {
+            padding: 5px 15px;
+            border-radius: 15px;
+        }
+        .search-radio {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="/Front/Header :: header"></div>
+
+<div class="container mt-5">
+    <h4 class="page-title text-center">관리자 페이지 - <small class="text-muted">회원 목록</small></h4>
+
+    <div class="list-group list-group-horizontal mb-4 justify-content-center">
+        <a th:href="@{/admin/list}" class="list-group-item list-group-item-action active">전체 회원목록</a>
+        <a th:href="@{/admin/localList}" class="list-group-item list-group-item-action">일반회원 목록</a>
+        <a th:href="@{/admin/socialList}" class="list-group-item list-group-item-action">소셜회원 목록</a>
+        <a th:href="@{/admin/lockList}" class="list-group-item list-group-item-action">계정잠금 회원</a>
+    </div>
+
+    <!-- 검색 폼 -->
+    <form class="d-flex justify-content-end mb-4" method="get" onsubmit="return validateForm(this);">
+        <div class="input-group" style="max-width: 500px;">
+            <div class="input-group-text bg-light border-0 search-radio">
+                <input type="radio" name="searchField" value="id" class="form-check-input" th:checked="${param.searchField == 'id'}"/>아이디
+            </div>
+            <div class="input-group-text bg-light border-0 search-radio">
+                <input type="radio" name="searchField" value="name" class="form-check-input" th:checked="${param.searchField == 'name'}"/>이름
+            </div>
+            <input class="form-control" type="search" name="searchWord" placeholder="검색어를 입력하세요" th:value="${param.searchWord}"/>
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover text-center align-middle">
+            <thead>
+            <tr>
+                <th>번호</th>
+                <th>아이디</th>
+                <th>닉네임</th>
+                <th>이름</th>
+                <th>전화번호</th>
+                <th>이메일</th>
+                <th>우편번호</th>
+                <th>주소</th>
+                <th>상세주소</th>
+                <th>가입일</th>
+                <th>권한</th>
+                <th>잠금계정</th>
+                <th>회원정보</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(lists)}">
+                <td colspan="13" class="text-center">등록된 회원이 없습니다.</td>
+            </tr>
+            <tr th:each="dto, loopStat : ${lists}">
+                <td th:text="${maps != null ? (maps.totalCount - (((maps.pageNum-1) * maps.pageSize) + loopStat.index)) : 0}"></td>
+                <td th:text="${dto.id}"></td>
+                <td th:text="${dto.nick}"></td>
+                <td th:text="${dto.name}"></td>
+                <td th:text="${dto.phone}"></td>
+                <td th:text="${dto.email}"></td>
+                <td th:text="${dto.zipcode}"></td>
+                <td th:text="${dto.address}"></td>
+                <td th:text="${dto.detailAddress}"></td>
+                <td th:text="${#temporals.format(dto.createDate, 'yyyy-MM-dd')}"></td>
+                <td th:text="${dto.authority}"></td>
+                <td>
+                    <span th:if="${dto.accountLocked == 1}" class="badge bg-danger">잠김</span>
+                    <span th:if="${dto.accountLocked == 0}" class="badge bg-success">-</span>
+                </td>
+                <td>
+                    <a th:href="@{/admin/userdetails(id=${dto.id})}" class="btn btn-sm btn-outline-info">상세보기</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-center mt-4">
+        <div class="btn-group" role="group" aria-label="Pagination">
+            <a class="btn btn-outline-primary" th:classappend="${currentPage == 0} ? 'disabled'"
+               th:href="@{/admin/list(page=${currentPage - 1}, searchField=${param.searchField}, searchWord=${param.searchWord})}">이전</a>
+            <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <a class="btn" th:classappend="${i == currentPage} ? 'btn-primary' : 'btn-outline-primary'"
+                   th:href="@{/admin/list(page=${i}, searchField=${param.searchField}, searchWord=${param.searchWord})}" th:text="${i + 1}"></a>
+            </span>
+            <a class="btn btn-outline-primary" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'"
+               th:href="@{/admin/list(page=${currentPage + 1}, searchField=${param.searchField}, searchWord=${param.searchWord})}">다음</a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="/Front/Footer :: footer"></div>
+
+<script>
+    function validateForm(fm) {
+        let sFieldCnt = 0;
+        for (let i = 0; i < fm.searchField.length; i++) {
+            if (fm.searchField[i].checked == true) sFieldCnt++;
+        }
+        if (sFieldCnt == 0) {
+            alert("한개 이상의 항목을 체크하셔야 합니다.");
+            return false;
+        } else if (fm.searchWord.value.trim() === "") {
+            alert("검색창에 아이디나 이름을 입력해주세요.");
+            return false;
+        }
+    }
+</script>
+</body>
+</html>

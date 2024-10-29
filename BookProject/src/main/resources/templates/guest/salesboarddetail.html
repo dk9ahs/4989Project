@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>사구팔구</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css">
+  <script th:src="@{/js/Websocket.js}"></script>
+  <script th:src="@{/js/chat.js}"></script>
+  <link th:href="@{/css/Header.css}" rel="stylesheet" />
+  <link th:href="@{/css/Footer.css}" rel="stylesheet" />
+  <style>
+    table {
+        font-weight: 400;
+        border-collapse: collapse;
+        width: 100%;
+        box-shadow: 0 0 0 1px #C0C78C;
+        border-radius: 8px;
+        border: hidden;
+    }
+
+    .commentTable > th,td {
+        padding : 2px 0px  5px 10px;
+    }
+    .btn{
+       background-color: #86AB89;
+    }
+
+    .button {
+        background-color: #ff6f61;
+        color: white;
+        padding: 5px 8px;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+        font-size: 16px;
+    }
+    .book-image {
+        width: 150px;
+        height: 200px;
+        margin-right: 10px;
+    }
+  </style>
+  <script th:inline="javascript">
+    function deletePost(idx){
+      var confirmed = confirm("정말로 삭제하겠습니까?");
+
+      if (confirmed) {
+          var form = document.createElement('form');
+          form.method = "GET";
+          form.action = "/salesboard/delete";
+
+          var input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'sidx';
+          input.value = idx;
+
+          form.appendChild(input);
+          document.body.appendChild(form);
+          form.submit();
+      }
+    }
+
+    // 바로구매 버튼 클릭 시 결제 페이지로 이동
+    function redirectToOrder(limage, sidx, title, author, publisher, price) {
+        // 인코딩 후 결제 페이지로 전달
+        const orderUrl = `/order/create?limage=${encodeURIComponent(limage)}&sidx=${sidx}&title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&publisher=${encodeURIComponent(publisher)}&price=${encodeURIComponent(price)}`;
+        window.location.href = orderUrl;
+    }
+
+    function openNewWindow(receiver){
+        let loginNick = [[${loginNick}]]
+
+        if(loginNick == 'Guest'){
+           var answer = window.confirm("비회원은 쪽지 기능이 불가능합니다. 로그인 하시겠습니까?");
+           if(answer == true){
+                location.href="../guest/loginform";
+           }
+        }
+        else {
+            window.open("/messages/form?receiver=" + receiver, "popup",
+                   'width=600,height=500');
+        }
+    }
+  </script>
+</head>
+<body>
+<div th:replace="Front/Header :: header"></div>
+<div class="row mt-3 mx-1">
+  <div class="container">
+    <h3><b>거래게시판</b></h3>
+    <table class="table table-bordered">
+      <colgroup>
+        <col style="width: 25%;" />
+        <col style="width: 15%;" />
+        <col style="width: 20%;" />
+        <col style="width: 15%;" />
+        <col style="width: 20%;" />
+      </colgroup>
+      <tbody>
+      <tr>
+        <td rowspan="7" style="text-align: center; vertical-align: middle;">
+          <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <img th:if="${salesBoard.limage != null}" th:src="@{${salesBoard.limage}}" alt="Image" class="d-block w-100"  style="height: 350px">
+                <img th:if="${salesBoard.oimage == '' or salesBoard.oimage == null} and ${salesBoard.limage == null} and (${salesBoard.simage == '' or salesBoard.simage == null})" src="/images/NoImage.jpg" alt="No Image" class="d-block w-100"  style="height: 350px">
+                <img th:unless="${salesBoard.oimage == '' or salesBoard.oimage == null}" th:src="@{/images/{image}(image=${salesBoard.simage})}" alt="Book Image" class="d-block w-100"  style="height: 350px">
+              </div>
+            </div>
+          </div>
+<!--          <button th:if="${salesBoard.oimage != ''} and ${salesBoard.oimage != null}" class="button" th:onclick="|location.href='@{download(simage=${salesBoard.simage}, sidx=${salesBoard.sidx})}'|">다운로드</button>-->
+          <button th:if="${salesBoard.oimage != ''} and ${salesBoard.oimage != null}" class="button" th:onclick="|location.href='@{download(simage=${salesBoard.simage})}'|">다운로드</button>
+        </td>
+        <td colspan="4">
+          <th:block th:switch="${salesBoard.classification}">
+            <h5 th:case="sale" th:text="'[판매] ' + ${salesBoard.title}"></h5>
+            <h5 th:case="trade" th:text="'[교환] ' + ${salesBoard.title}"></h5>
+            <h5 th:case="sharing" th:text="'[나눔] ' + ${salesBoard.title}"></h5>
+            <h5 th:case="wanted" th:text="'[구해요] ' + ${salesBoard.title}"></h5>
+            <h5 th:case="*" th:text="'[거래완료] ' + ${salesBoard.title}"></h5>
+          </th:block>
+
+          <span style="display:inline-block; text-align:right; font-size:20px; width:100%;">
+                <i class="bi bi-eye"></i> <span th:text="${salesBoard.viewCount}"></span>
+                    <th:block th:if="${loginNick == 'Guest'}">
+                        <i class="bi bi-hand-thumbs-up"></i>
+                    </th:block>
+                    <th:block th:unless="${loginNick == 'Guest'}">
+                        <a th:href="@{like(sidx=${salesBoard.sidx})}"><i class="bi bi-hand-thumbs-up text-danger" th:if="${liked}"></i><i class="bi bi-hand-thumbs-up" th:unless="${liked}"></i></a>
+                    </th:block>
+                <span th:text="${salesBoard.likeCount}"></span>&nbsp;
+              </span>
+        </td>
+      </tr>
+      <tr>
+        <th class="text-center" style="vertical-align:middle;">작성자</th>
+        <td th:text="${salesBoard.nick}"> 닉네임 </td>
+        <th class="text-center" style="vertical-align:middle;">작성일</th>
+        <td>
+              <span th:if="${salesBoard.updateDate != null && salesBoard.updateDate != salesBoard.createDate}"
+                    th:text="${#temporals.format(salesBoard.updateDate, 'yyyy-MM-dd')} + ' (수정)'"></span>
+          <span th:unless="${salesBoard.updateDate != null && salesBoard.updateDate != salesBoard.createDate}"
+                th:text="${#temporals.format(salesBoard.createDate, 'yyyy-MM-dd')}"></span>
+        </td>
+      </tr>
+      <tr>
+        <th class="text-center" style="vertical-align:middle;"> 가격 </th>
+        <td th:if="${salesBoard.price == 0}" style="color: red;">가격 없음</td>
+        <td th:unless="${salesBoard.price == 0}" style="color: red;" th:text="${salesBoard.price}"></td>
+        <th class="text-center" style="vertical-align:middle;"> 지역 </th>
+        <td th:if="${#strings.contains(salesBoard.region, '선택')}">지역 미설정</td>
+        <td th:unless="${#strings.contains(salesBoard.region, '선택')}" th:text="${salesBoard.region}"></td>
+      </tr>
+      <tr>
+        <th class="text-center" style="vertical-align:middle;"> 책 상세내용 </th>
+        <td colspan="3">
+          <span th:text="${salesBoard.booktitle}"></span> |
+          <span th:text="${salesBoard.author}"></span> |
+          <span th:text="${salesBoard.publisher}"></span>
+        </td>
+      </tr>
+      <tr>
+        <th class="text-center" style="vertical-align:middle;">상세 설명</th>
+        <td colspan="3" th:text="${salesBoard.content}">글 내용 </td>
+      </tr>
+      <tr>
+        <td colspan="4" class="text-center">
+          <button class="button" th:unless="${salesBoard.price == 0}"
+                  th:data-limage="${salesBoard.limage}"
+                  th:data-sidx="${salesBoard.sidx}"
+                  th:data-title="${salesBoard.booktitle}"
+                  th:data-author="${salesBoard.author}"
+                  th:data-publisher="${salesBoard.publisher}"
+                  th:data-price="${salesBoard.price}"
+                  onclick="redirectToOrder(
+                      this.getAttribute('data-limage'),
+                      this.getAttribute('data-sidx'),
+                      this.getAttribute('data-title'),
+                      this.getAttribute('data-author'),
+                      this.getAttribute('data-publisher'),
+                      this.getAttribute('data-price'))">
+            바로구매
+          </button>
+          <button th:if="${salesBoard.price == 0}" class="button" th:attr="onclick=|openNewWindow('${salesBoard.nick}')|">연락하기</button>
+          <button class="button">장바구니</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="col d-flex justify-content-end">
+      <!-- 각종 버튼 부분 -->
+      <button type="button" class="btn text-white" onclick="location.href='/salesboard';">리스트보기</button>
+      &nbsp;&nbsp;
+      <button type="button" class="btn text-white" onclick="location.href='/salesboard/write';">글쓰기</button>
+      &nbsp;&nbsp;
+      <div th:if="${salesBoard.nick == loginNick} or ${#authentication.authorities.?[authority == 'ROLE_ADMIN'].size() > 0}">
+        <button type="button" class="btn text-white" th:onclick="|location.href='@{edit(sidx=${salesBoard.sidx})}'|">수정하기</button>
+        <button type="button" class="btn text-white" th:onclick="deletePost([[${salesBoard.sidx}]]);">삭제</button>
+      </div>
+      &nbsp;&nbsp;
+    </div>
+  </div>
+</div>
+&nbsp;
+<div th:replace="Front/Footer :: footer"></div>
+
+</body>
+</html>
