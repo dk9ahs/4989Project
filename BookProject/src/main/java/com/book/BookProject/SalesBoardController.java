@@ -176,7 +176,7 @@ public class SalesBoardController {
     }
 
     // 게시글 삭제 하기
-    @GetMapping("/delete")
+    @PostMapping("/delete")
     public String delete(@RequestParam Long sidx){
         salesBoardService.deletedSalesBored(sidx);
 

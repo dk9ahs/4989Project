@@ -12,10 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
                 .addResourceHandler("/images/**")  // 클라이언트에서 요청할 URL 패턴
-//                .addResourceLocations("file:/C:/Users/USER/Desktop/project/BookProject/src/main/resources/static/images/"); // 실제 파일 위치
-//                .addResourceLocations("file:/C:/DevData2/project/BookProject/src/main/resources/static/images/"); // 실제 파일 위치
-//                .addResourceLocations("file:/Users/leechangkyun/BookProject/BookProject/src/main/resources/static/images/"); // 실제 파일 위치
-                .addResourceLocations("file:C:/FrontEnd/new2/BookProject/src/main/resources/static/images/"); // 실제 파일 위치
+                .addResourceLocations("classpath:/static/images/"); // 실제 파일 위치
     }
 
     @Override

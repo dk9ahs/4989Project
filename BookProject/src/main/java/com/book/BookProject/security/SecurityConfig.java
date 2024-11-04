@@ -18,8 +18,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 public class SecurityConfig {
     private final UserServiceImpl userServiceImpl;
@@ -27,6 +25,7 @@ public class SecurityConfig {
     private final CustomAuthenticationFailureHandler failureHandler;
     private final CustomAuthenticationSuccessHandler successHandler;
     private final CustomAuthenticationProvider customAuthenticationProvider; // CustomAuthenticationProvider 추가
+
     public SecurityConfig(UserServiceImpl userServiceImpl,
                           CustomOAuth2UserService customOAuth2UserService,
                           CustomAuthenticationFailureHandler failureHandler,
@@ -38,6 +37,7 @@ public class SecurityConfig {
         this.successHandler = successHandler;
         this.customAuthenticationProvider = customAuthenticationProvider; // CustomAuthenticationProvider 주입
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -66,26 +66,31 @@ public class SecurityConfig {
                         .usernameParameter("username")
                         .passwordParameter("password")
                 )
+
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .defaultSuccessUrl("/SocialLoginSuccess", true)
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 )
+
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                 )
+                //권한 요청 실패시 페이지 처리
                 .exceptionHandling(handling -> handling
                         .accessDeniedPage("/access-denied")
                 )
                 .build();
     }
+
     @Bean
     @Lazy
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
@@ -95,6 +100,8 @@ public class SecurityConfig {
                 .passwordEncoder(passwordEncoder);
         return authenticationManagerBuilder.build();
     }
+
+    //매핑 중 슬래시가 두개 이상들어갔을 때 처리해주는 것.
     @Bean
     public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
